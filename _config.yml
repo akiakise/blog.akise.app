@@ -100,7 +100,7 @@ comments:
     repo_id: R_kgDOLXocmA
     category: Announcements
     category_id: DIC_kwDOLXocmM4CdgAN
-    mapping: pathname
+    mapping: title
     input_position: bottom
     lang: # optional, default to the value of `site.lang`
     reactions_enabled: # optional, default to the value of `1`
