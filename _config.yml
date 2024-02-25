@@ -96,10 +96,10 @@ comments:
     issue_term: # < url | pathname | title | ...>
   # Giscus options › https://giscus.app
   giscus:
-    repo: akiakise/akiakise.com-comments
-    repo_id: R_kgDOGvYHqQ
+    repo: akiakise/akiakise.com
+    repo_id: R_kgDOLXocmA
     category: Announcements
-    category_id: DIC_kwDOGvYHqc4Cdf4d
+    category_id: DIC_kwDOLXocmM4CdgAN
     mapping: pathname
     input_position: bottom
     lang: # optional, default to the value of `site.lang`
