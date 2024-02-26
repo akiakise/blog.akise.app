@@ -1,3 +1,3 @@
 # AkiAkise's blog
 
-Blog source code of akiakise.com.
+Blog source code of https://blog.akise.app.
