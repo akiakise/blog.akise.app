@@ -23,7 +23,7 @@ description: >- # used by seo meta and the atom feed
 
 # Fill in the protocol & hostname for your site.
 # e.g. 'https://username.github.io', note that it does not end with a '/'.
-url: "https://akiakise.com"
+url: "https://blog.akise.app"
 
 github:
   username: akiakise # change to your github username
@@ -96,7 +96,7 @@ comments:
     issue_term: # < url | pathname | title | ...>
   # Giscus options › https://giscus.app
   giscus:
-    repo: akiakise/akiakise.com
+    repo: akiakise/blog.akise.app
     repo_id: R_kgDOLXocmA
     category: Announcements
     category_id: DIC_kwDOLXocmM4CdgAN
