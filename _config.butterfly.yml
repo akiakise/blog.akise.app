@@ -33,7 +33,7 @@ code_word_wrap: false
 # formal:
 #   icon: link || the description || color
 social:
-  fab fa-github: https://github.com/akiakise || Github || '#24292e'
+  fab fa-stack-overflow: https://stackoverflow.com/users/7944150/aki-akise || Stack Overflow || '#e7700d'
   fas fa-envelope: mailto:akiakise@outlook.com || Email || '#4a7dbe'
 
 # Image (圖片設置)
