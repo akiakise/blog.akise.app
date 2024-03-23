@@ -26,7 +26,7 @@ Spring Boot 为 WebSocket 提供的 starter pom 是 `spring-boot-starter-websock
 
 spring-boot-starter 选择 Thymeleaf 和 WebSocket
 
-![starter pom](/assets/img/spring-boot-starter.png)
+![starter pom](/img/spring-boot-starter.png)
 
 ### 创建拦截器
 
@@ -303,15 +303,15 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
 广播
 
-![browser](/assets/img/websocket-browser-broadcast.gif)
+![browser](/img/websocket-browser-broadcast.gif)
 
 动态群组
 
-![browser](/assets/img/websocket-browser-group.gif)
+![browser](/img/websocket-browser-group.gif)
 
 点对点
 
-![browser](/assets/img/websocket-browser-chat.gif)
+![browser](/img/websocket-browser-chat.gif)
 
 ## 安卓客户端
 
@@ -352,7 +352,7 @@ compile 'com.github.NaikSoftware:StompProtocolAndroid:1.4.3'
 
 ### 布局
 
-![安卓广播布局](/assets/img/websocket-android-layout.png)
+![安卓广播布局](/img/websocket-android-layout.png)
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -552,15 +552,15 @@ public class BroadcastActivity extends AppCompatActivity {
 
 广播
 
-![broadcast](/assets/img/websocket-android-broadcast.gif)
+![broadcast](/img/websocket-android-broadcast.gif)
 
 动态群组
 
-![group](/assets/img/websocket-android-group.gif)
+![group](/img/websocket-android-group.gif)
 
 点对点
 
-![chat](/assets/img/websocket-android-chat.gif)
+![chat](/img/websocket-android-chat.gif)
 
 ## 源码
 

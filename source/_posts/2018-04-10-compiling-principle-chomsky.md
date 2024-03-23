@@ -3,7 +3,7 @@ title: 编译原理之 Chomsky 文法的判断 —— Java 实现
 date: 2018-04-10 16:58:38 +0800
 categories: [Learn]
 tags: [learn]
-math: true
+mathjax: true
 ---
 
 文法的定义和记号

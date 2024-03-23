@@ -42,7 +42,7 @@ curl 127.0.0.1:5000/static/images/test.png
 
 发现结果是乱码：
 
-![curl](/assets/img/server_curl_test.png "curl")
+![curl](/img/server_curl_test.png "curl")
 
 证明成功访问到了图片资源。
 
