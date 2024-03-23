@@ -491,15 +491,15 @@ twikoo:
 # https://giscus.app/
 giscus:
   repo: akiakise/blog.akise.app
-  repo_id: R_kgDOLXocmA
-  category_id: DIC_kwDOLXocmM4CdgAN
+  repo_id: R_kgDOLkT3kg
+  category_id: DIC_kwDOLkT3ks4CeK_U
   theme:
     light: light
     dark: dark
   option:
+    data-category: Announcements
     data-mapping: title
     data-input-position: bottom
-    data-category: Announcements
 
 # Remark42
 # https://remark42.com/docs/configuration/frontend/
