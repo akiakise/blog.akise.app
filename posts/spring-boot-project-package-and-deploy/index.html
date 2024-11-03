@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Spring Boot 项目打包并部署到 Tomcat、Tomcat 同时部署多应用 | AkiAkise's Blog</title><meta name="author" content="Aki Akise"><meta name="copyright" content="Aki Akise"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Spring Boot 项目开发完毕后，需要部署到 tomcat 服务器下，鉴于经常忘记部署流程，特地写了一篇博客来记录。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring Boot 项目打包并部署到 Tomcat、Tomcat 同时部署多应用">
+<meta property="og:url" content="https://blog.akise.app/posts/spring-boot-project-package-and-deploy/index.html">
+<meta property="og:site_name" content="AkiAkise&#39;s Blog">
+<meta property="og:description" content="Spring Boot 项目开发完毕后，需要部署到 tomcat 服务器下，鉴于经常忘记部署流程，特地写了一篇博客来记录。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2018-01-21T13:02:42.000Z">
+<meta property="article:modified_time" content="2024-11-03T14:07:38.182Z">
+<meta property="article:author" content="Aki Akise">
+<meta property="article:tag" content="deployment">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="spring boot">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/favicons/favicon.ico"><link rel="canonical" href="https://blog.akise.app/posts/spring-boot-project-package-and-deploy/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><meta name="google-site-verification" content="M-QntbXhztoT9bBBHMYL_RgY4ei4ifWoFPnUhDhyqc8"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: {"limitDay":365,"position":"top","messagePrev":"It has been","messageNext":"days since the last update, the content of the article may be outdated."},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Spring Boot 项目打包并部署到 Tomcat、Tomcat 同时部署多应用',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-11-03 22:07:38',
+  isShuoshuo: false
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="AkiAkise's Blog" type="application/atom+xml">
+</head><body><div id="web_bg" style="background-image: url(url(/img/website/cover.jpg));"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/website/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">AkiAkise's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Spring Boot 项目打包并部署到 Tomcat、Tomcat 同时部署多应用</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Spring Boot 项目打包并部署到 Tomcat、Tomcat 同时部署多应用</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2018-01-21T13:02:42.000Z" title="发表于 2018-01-21 21:02:42">2018-01-21</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-11-03T14:07:38.182Z" title="更新于 2024-11-03 22:07:38">2024-11-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Java/">Java</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">811</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>3分钟</span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>Spring Boot 项目开发完毕后，需要部署到 tomcat 服务器下，鉴于经常忘记部署流程，特地写了一篇博客来记录。</p>
+<span id="more"></span>
+
+<h1 id="打包为-war"><a href="#打包为-war" class="headerlink" title="打包为 war"></a>打包为 war</h1><h2 id="修改-packaging"><a href="#修改-packaging" class="headerlink" title="修改 packaging"></a>修改 packaging</h2><p>基于 Intellij IDEA 构建项目有一个好处是大多数东西它已经自动帮你设置好了，不需要太多修改的地方。</p>
+<p>修改 <code>pom.xml</code> 中的打包格式：</p>
+<p><code>&lt;packaging&gt;jar&lt;/packaging&gt;</code> –&gt; <code>&lt;packaging&gt;war&lt;/packaging&gt;</code></p>
+<h2 id="插件与组件"><a href="#插件与组件" class="headerlink" title="插件与组件"></a>插件与组件</h2><p>有的博客中提到了 build 组件和 tomcat 插件（<code>pom.xml</code> 中)，在 Intellij IDEA 生成的 pom 中并没有这些东西，所以可以直接跳过。</p>
+<h2 id="注册启动类"><a href="#注册启动类" class="headerlink" title="注册启动类"></a>注册启动类</h2><p>修改 Application 类，继承 <code>SpringBootServletInitializer</code> 并重写 <code>configure</code> 方法，在方法中注册启动类：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">Application</span> <span class="keyword">extends</span> <span class="title class_">SpringBootServletInitializer</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span> &#123;</span><br><span class="line">        SpringApplication.run(Application.class, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">protected</span> SpringApplicationBuilder <span class="title function_">configure</span><span class="params">(SpringApplicationBuilder builder)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> builder.sources(Application.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="打包"><a href="#打包" class="headerlink" title="打包"></a>打包</h2><p>选择 Intellij IDEA 的 Build -&gt; Build Artifacts -&gt; ProjectName: war -&gt; Build，就会在项目根目录的 target 文件夹下生成：项目名+版本号.war。</p>
+<h1 id="Tomcat-同时部署多应用"><a href="#Tomcat-同时部署多应用" class="headerlink" title="Tomcat 同时部署多应用"></a>Tomcat 同时部署多应用</h1><p>有时候受限于服务器资源，我们可能希望 Tomcat 同时运行多个应用。有两种解决方案：一种是单一 tomcat，通过配置文件同时服务多个应用；另一种是多个 tomcat，各个应用互不影响，但是比较麻烦。我们采用第一种方案。</p>
+<p>Tomcat 默认的配置文件在 <code>/path/to/tomcat/conf/server.xml</code></p>
+<p>单一 tomcat 运行多应用的关键就是在 server.xml 中配置多个 Service。</p>
+<h2 id="默认的-Tomcat-Service"><a href="#默认的-Tomcat-Service" class="headerlink" title="默认的 Tomcat Service"></a>默认的 Tomcat Service</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Service</span> <span class="attr">name</span>=<span class="string">&quot;Catalina&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Connector</span> <span class="attr">port</span>=<span class="string">&quot;8080&quot;</span> <span class="attr">protocol</span>=<span class="string">&quot;HTTP/1.1&quot;</span> <span class="attr">connectionTimeout</span>=<span class="string">&quot;20000&quot;</span> <span class="attr">redirectPort</span>=<span class="string">&quot;8443&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Connector</span> <span class="attr">port</span>=<span class="string">&quot;8009&quot;</span> <span class="attr">protocol</span>=<span class="string">&quot;AJP/1.3&quot;</span> <span class="attr">redirectPort</span>=<span class="string">&quot;8443&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Engine</span> <span class="attr">name</span>=<span class="string">&quot;Catalina&quot;</span> <span class="attr">defaultHost</span>=<span class="string">&quot;localhost&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Realm</span> <span class="attr">className</span>=<span class="string">&quot;org.apache.catalina.realm.LockOutRealm&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">Realm</span> <span class="attr">className</span>=<span class="string">&quot;org.apache.catalina.realm.UserDatabaseRealm&quot;</span> <span class="attr">resourceName</span>=<span class="string">&quot;UserDatabase&quot;</span>/&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">Realm</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Host</span> <span class="attr">name</span>=<span class="string">&quot;localhost&quot;</span>  <span class="attr">appBase</span>=<span class="string">&quot;webapps&quot;</span> <span class="attr">unpackWARs</span>=<span class="string">&quot;true&quot;</span> <span class="attr">autoDeploy</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">Valve</span> <span class="attr">className</span>=<span class="string">&quot;org.apache.catalina.valves.AccessLogValve&quot;</span> <span class="attr">directory</span>=<span class="string">&quot;logs&quot;</span> <span class="attr">prefix</span>=<span class="string">&quot;java_dx_style_log&quot;</span> <span class="attr">suffix</span>=<span class="string">&quot;.txt&quot;</span> <span class="attr">pattern</span>=<span class="string">&quot;%h %l %u %t <span class="symbol">&amp;quot;</span>%r<span class="symbol">&amp;quot;</span> %s %b&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">Host</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">Engine</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">Service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>要让 Tomcat 同时运行多应用，我们只需要新增 Service。</p>
+<h2 id="新增-Service"><a href="#新增-Service" class="headerlink" title="新增 Service"></a>新增 Service</h2><p>新增 Service 有几点需要注意的：</p>
+<ul>
+<li>Service name 不能与原来的 <code>Catalina</code> 相同</li>
+<li>HTTP port 和 AJP port 不能与原来的相同</li>
+<li>Engine name 不能与原来的相同</li>
+<li>Host 的 appBase 属性不能与原来的相同</li>
+</ul>
+<p>以下是一个示例：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Service</span> <span class="attr">name</span>=<span class="string">&quot;newService&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Connector</span> <span class="attr">port</span>=<span class="string">&quot;8081&quot;</span> <span class="attr">protocol</span>=<span class="string">&quot;HTTP/1.1&quot;</span> <span class="attr">connectionTimeout</span>=<span class="string">&quot;20000&quot;</span> <span class="attr">redirectPort</span>=<span class="string">&quot;8443&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Connector</span> <span class="attr">port</span>=<span class="string">&quot;8010&quot;</span> <span class="attr">protocol</span>=<span class="string">&quot;AJP/1.3&quot;</span> <span class="attr">redirectPort</span>=<span class="string">&quot;8443&quot;</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">Engine</span> <span class="attr">name</span>=<span class="string">&quot;newService&quot;</span> <span class="attr">defaultHost</span>=<span class="string">&quot;localhost&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Realm</span> <span class="attr">className</span>=<span class="string">&quot;org.apache.catalina.realm.LockOutRealm&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">Realm</span> <span class="attr">className</span>=<span class="string">&quot;org.apache.catalina.realm.UserDatabaseRealm&quot;</span> <span class="attr">resourceName</span>=<span class="string">&quot;UserDatabase&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">Realm</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">Host</span> <span class="attr">name</span>=<span class="string">&quot;localhost&quot;</span> <span class="attr">appBase</span>=<span class="string">&quot;newService&quot;</span> <span class="attr">unpackWARs</span>=<span class="string">&quot;true&quot;</span> <span class="attr">autoDeploy</span>=<span class="string">&quot;true&quot;</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">Valve</span> <span class="attr">className</span>=<span class="string">&quot;org.apache.catalina.valves.AccessLogValve&quot;</span> <span class="attr">directory</span>=<span class="string">&quot;logs&quot;</span> <span class="attr">prefix</span>=<span class="string">&quot;eros_dx_style_log&quot;</span> <span class="attr">suffix</span>=<span class="string">&quot;.txt&quot;</span> <span class="attr">pattern</span>=<span class="string">&quot;%h %l %u %t <span class="symbol">&amp;quot;</span>%r<span class="symbol">&amp;quot;</span> %s %b&quot;</span> /&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">Host</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">Engine</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">Service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>修改完成后重启 Tomcat，部署新应用到上面配置文件指示的 <code>/path/to/tomcat/newService</code> 文件夹下即可。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.akise.app">Aki Akise</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.akise.app/posts/spring-boot-project-package-and-deploy/">https://blog.akise.app/posts/spring-boot-project-package-and-deploy/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.akise.app" target="_blank">AkiAkise's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/deployment/">deployment</a><a class="post-meta__tags" href="/tags/java/">java</a><a class="post-meta__tags" href="/tags/spring-boot/">spring boot</a></div><div class="post-share"><div class="social-share" data-image="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/compiling-principle-chomsky/" title="编译原理之 Chomsky 文法的判断 —— Java 实现"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">编译原理之 Chomsky 文法的判断 —— Java 实现</div></div><div class="info-2"><div class="info-item-1">文法的定义和记号 $$ G &#x3D; (V_N, V_T, P, S) \qquad (V_N \cap V_T &#x3D; \varnothing, V_N \cup V_T &#x3D; V) $$ 是 N.Chomsky 在 1956 年描述形式语言时首先给出的。同时，Chomsky 还对产生式的形式给以不同的限制而定义了四类基本的文法，分别称之为 0 型文法，1 型文法，2 型文法和 3 型文法。   明确定义 0 型文法：对任一产生式 $\alpha \to \beta$，都有 $\alpha \in V^+, \quad \beta \in V^*$ 1 型文法：对任一产生式 $\alpha \to \beta$，都有 $\mid\beta\mid \ge \mid\alpha\mid, \quad \alpha,\beta \in V^+$，仅仅 $\alpha \to \epsilon$ 除外 2 型文法：对任一产生式 $A \to \beta$，都有 $A \in V_N, \quad \beta \in V^+$ 3 型文法：任一产生式都形如 $A...</div></div></div></a><a class="pagination-related" href="/posts/spring-boot-shiro/" title="Spring Boot 集成 Shiro 权限管理与密码加盐加密存储"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Spring Boot 集成 Shiro 权限管理与密码加盐加密存储</div></div><div class="info-2"><div class="info-item-1">在 Spring 中，流行的涉及权限管理的框架有两个：Spring Security 和 Apache Shiro。但是去了解一下 Spring Security 就知道，简单的权限管理根本用不到那么复杂的功能。在自己的项目中，我更倾向于使用简单明了的 Apache Shiro。   我们以最常见的用户、角色、权限关系做例子。一个用户有多个角色、一个角色有多个用户、一个角色有多个权限、一个权限有多个角色。即用户与角色、角色与权限是多对多关系。 引入 shiro-spring 包pom包依赖重要的是 shiro-spring 这个包。 12345678910111213141516171819202122&lt;dependency&gt;  &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;  &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;&lt;/dependency&gt;&lt;dependency&gt; ...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="giscus-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/website/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Aki Akise</div><div class="author-info-description">akiakise 的技术博客</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/akiakise"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://stackoverflow.com/users/7944150/aki-akise" target="_blank" title="Stack Overflow"><i class="fab fa-stack-overflow" style="color: #e7700d;"></i></a><a class="social-icon" href="mailto:akiakise@outlook.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Take it easy to comment or discuss / 欢迎评论或讨论</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%89%93%E5%8C%85%E4%B8%BA-war"><span class="toc-number">1.</span> <span class="toc-text">打包为 war</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BF%AE%E6%94%B9-packaging"><span class="toc-number">1.1.</span> <span class="toc-text">修改 packaging</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8F%92%E4%BB%B6%E4%B8%8E%E7%BB%84%E4%BB%B6"><span class="toc-number">1.2.</span> <span class="toc-text">插件与组件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B3%A8%E5%86%8C%E5%90%AF%E5%8A%A8%E7%B1%BB"><span class="toc-number">1.3.</span> <span class="toc-text">注册启动类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%93%E5%8C%85"><span class="toc-number">1.4.</span> <span class="toc-text">打包</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Tomcat-%E5%90%8C%E6%97%B6%E9%83%A8%E7%BD%B2%E5%A4%9A%E5%BA%94%E7%94%A8"><span class="toc-number">2.</span> <span class="toc-text">Tomcat 同时部署多应用</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%BB%98%E8%AE%A4%E7%9A%84-Tomcat-Service"><span class="toc-number">2.1.</span> <span class="toc-text">默认的 Tomcat Service</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%B0%E5%A2%9E-Service"><span class="toc-number">2.2.</span> <span class="toc-text">新增 Service</span></a></li></ol></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><div id="footer-wrap"><div class="copyright">&copy;2017 - 2024 By Aki Akise</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.isShuoshuo
+  const option = {"data-category":"Announcements","data-mapping":"title","data-input-position":"bottom"}
+
+  const getGiscusTheme = theme => theme === 'dark' ? 'dark' : 'light'
+
+  const createScriptElement = config => {
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => {
+      ele.setAttribute(key, value)
+    })
+    return ele
+  }
+
+  const loadGiscus = (el = document, key) => {
+    const mappingConfig = isShuoshuo
+      ? { 'data-mapping': 'specific', 'data-term': key }
+      : { 'data-mapping': (option && option['data-mapping']) || 'pathname' }
+
+    const giscusConfig = {
+      src: 'https://giscus.app/client.js',
+      'data-repo': 'akiakise/blog.akise.app',
+      'data-repo-id': 'R_kgDOLkT3kg',
+      'data-category-id': 'DIC_kwDOLkT3ks4CeK_U',
+      'data-theme': getGiscusTheme(document.documentElement.getAttribute('data-theme')),
+      'data-reactions-enabled': '1',
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      ...mappingConfig
+    }
+
+    const scriptElement = createScriptElement(giscusConfig)
+
+    el.querySelector('#giscus-wrap').appendChild(scriptElement)
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGiscus = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const changeGiscusTheme = theme => {
+    const iframe = document.querySelector('#giscus-wrap iframe')
+    if (iframe) {
+      const message = {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(theme)
+          }
+        }
+      }
+      iframe.contentWindow.postMessage(message, 'https://giscus.app')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeGiscusTheme, 'giscus')
+
+  if (isShuoshuo) {
+    'Giscus' === 'Giscus'
+      ? window.shuoshuoComment = { loadComment: loadGiscus }
+      : window.loadOtherComment = loadGiscus
+    return
+  }
+
+  if ('Giscus' === 'Giscus' || !false) {
+    if (false) btf.loadComment(document.getElementById('giscus-wrap'), loadGiscus)
+    else loadGiscus()
+  } else {
+    window.loadOtherComment = loadGiscus
+  }
+})()</script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
