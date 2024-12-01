@@ -29,7 +29,7 @@ RabbitMQ 本身并没有直接支持延时队列功能，但是我们可以通�
 
 RabbitMQ 在创建 Queue 的时候可以指定一个 `x-dead-letter-exchange` 的选项，指定该选项后， Queue 中过期的消息都将自动转发到相应的 Exchange。我们只需要在对应的 Exchange 上绑定接收过期任务的队列即可。
 
-![Dead Letter eXchange](/img/dlx.png "引用一张相关博客的图片")
+![Dead Letter eXchange](/img/tech/dlx.png "引用一张相关博客的图片")
 
 Python 代码：
 

@@ -17,11 +17,11 @@ nav:
   fixed: false
 
 menu:
-  Home: / || fas fa-home
-  Categories: /categories/ || fas fa-folder-open
-  Tags: /tags/ || fas fa-tags
-  Archives: /archives/ || fas fa-archive
-  About: /about/ || fas fa-heart
+  首页: / || fas fa-home
+  分类: /categories/ || fas fa-folder-open
+  标签: /tags/ || fas fa-tags
+  归档: /archives/ || fas fa-archive
+  关于: /about/ || fas fa-heart
 
 # --------------------------------------
 # Code Blocks Settings

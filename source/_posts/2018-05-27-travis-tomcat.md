@@ -6,7 +6,7 @@ categories: [Technology]
 tags: [java, ci]
 ---
 
-![Travis CI](/img/travis.png "Travis CI")
+![Travis CI](/img/tech/travis.png "Travis CI")
 
 <!-- more -->
 
@@ -20,7 +20,7 @@ Travis CI 是软件开发领域一个在线的、分布式的持续集成服务�
 
 到 Travis 的官网 [https://travis-ci.org](https://travis-ci.org) 注册登录，其实是用 GitHub 做第三方授权登录，十分简单。
 
-![Travis Register](/img/travis-register.png "Travis Registeration Page")
+![Travis Register](/img/tech/travis-register.png "Travis Registeration Page")
 
 注册成功后进入个人 Profile 页，选择一个需要集成 Travis CI 的项目，开启 Build 即可。
 
@@ -137,7 +137,7 @@ script: mvn test
 
 提交并 push 到 GitHub 后，Travis就会自动构建这个 Maven 工程，可以在 Travis 上看到构建结果和过程中的详细输出：
 
-![Travis Build](/img/travis-build.png "Travis Build")
+![Travis Build](/img/tech/travis-build.png "Travis Build")
 
 ## 自动部署
 
@@ -254,4 +254,4 @@ after_success:
 
 点击 Travis 网站中 `buid` badge，选择 Markdown，将代码复制到项目 README 中即可看到 `build:passing` 的Badge。
 
-![Travis Badge](/img/travis-badge.png "Travis Badge")
+![Travis Badge](/img/tech/travis-badge.png "Travis Badge")
