@@ -1,0 +1,282 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat | AkiAkise's Blog</title><meta name="author" content="Aki Akise"><meta name="copyright" content="Aki Akise"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta property="og:type" content="article">
+<meta property="og:title" content="利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat">
+<meta property="og:url" content="https://blog.akise.app/posts/travis-tomcat/index.html">
+<meta property="og:site_name" content="AkiAkise&#39;s Blog">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2018-05-27T06:52:15.000Z">
+<meta property="article:modified_time" content="2024-12-28T05:06:24.611Z">
+<meta property="article:author" content="Aki Akise">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="ci">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/favicons/favicon.ico"><link rel="canonical" href="https://blog.akise.app/posts/travis-tomcat/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><meta name="google-site-verification" content="M-QntbXhztoT9bBBHMYL_RgY4ei4ifWoFPnUhDhyqc8"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  isShuoshuo: false
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="AkiAkise's Blog" type="application/atom+xml">
+</head><body><div id="web_bg" style="background-image: url(url(/img/website/cover.jpg));"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/website/avatar.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">AkiAkise's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2018-05-27T06:52:15.000Z" title="发表于 2018-05-27 14:52:15">2018-05-27</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-12-28T05:06:24.611Z" title="更新于 2024-12-28 13:06:24">2024-12-28</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Technology/">Technology</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;It has been&quot;,&quot;messageNext&quot;:&quot;days since the last update, the content of the article may be outdated.&quot;,&quot;postUpdate&quot;:&quot;2024-12-28 13:06:24&quot;}" hidden></div><p><img src="/img/tech/travis.png" alt="Travis CI" title="Travis CI"></p>
+<span id="more"></span>
+
+<p>上一个项目的部署测试流程是：本地写完，本地测试，打包为 war 上传到服务器，服务器部署到 Tomcat 指定目录下，重启 Tomcat。这一套流程下来少说十分钟，而且如果刚上传完发现有 bug 的话，还要本地改完重新再来一遍。</p>
+<p>重复这样的过程让人心神俱疲，好在现在已经有成熟的解决方案如 Travis CI、Jenkins等，今天我们就尝试着在 Java Web 项目中运用 Travis CI 来自动测试、部署、重启。</p>
+<p>Travis CI 是软件开发领域一个在线的、分布式的持续集成服务，它与 GitHub 的协作相当紧密，并且对开源项目免费。</p>
+<h2 id="注册配置-Travis"><a href="#注册配置-Travis" class="headerlink" title="注册配置 Travis"></a>注册配置 Travis</h2><p>到 Travis 的官网 <a target="_blank" rel="noopener" href="https://travis-ci.org/">https://travis-ci.org</a> 注册登录，其实是用 GitHub 做第三方授权登录，十分简单。</p>
+<p><img src="/img/tech/travis-register.png" alt="Travis Register" title="Travis Registeration Page"></p>
+<p>注册成功后进入个人 Profile 页，选择一个需要集成 Travis CI 的项目，开启 Build 即可。</p>
+<h2 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a>创建项目</h2><p>本文我们以一个简单的 Spring Boot 项目为例：</p>
+<h3 id="项目目录树"><a href="#项目目录树" class="headerlink" title="项目目录树"></a>项目目录树</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">│  .gitignore</span><br><span class="line">│  .travis.yml</span><br><span class="line">│  LICENSE</span><br><span class="line">│  README.md</span><br><span class="line">│</span><br><span class="line">└─Hello</span><br><span class="line">    │  .gitignore</span><br><span class="line">    │  HelloTravisCI.iml</span><br><span class="line">    │  mvnw</span><br><span class="line">    │  mvnw.cmd</span><br><span class="line">    │  pom.xml</span><br><span class="line">    │</span><br><span class="line">    ├─.idea</span><br><span class="line">    │  └─....</span><br><span class="line">    │</span><br><span class="line">    ├─.mvn</span><br><span class="line">    │  └─wrapper</span><br><span class="line">    │          maven-wrapper.jar</span><br><span class="line">    │          maven-wrapper.properties</span><br><span class="line">    │</span><br><span class="line">    ├─src</span><br><span class="line">    │  ├─main</span><br><span class="line">    │  │  ├─java</span><br><span class="line">    │  │  │  └─me</span><br><span class="line">    │  │  │      └─xlui</span><br><span class="line">    │  │  │          └─spring</span><br><span class="line">    │  │  │                  Application.java</span><br><span class="line">    │  │  │                  HelloController.java</span><br><span class="line">    │  │  │</span><br><span class="line">    │  │  └─resources</span><br><span class="line">    │  │      │  application.properties</span><br><span class="line">    │  │      │</span><br><span class="line">    │  │      ├─static</span><br><span class="line">    │  │      └─templates</span><br><span class="line">    │  └─test</span><br><span class="line">    │      └─java</span><br><span class="line">    │          └─me</span><br><span class="line">    │              └─xlui</span><br><span class="line">    │                  └─spring</span><br><span class="line">    │                          ApplicationTests.java</span><br><span class="line">    │</span><br><span class="line">    └─target</span><br><span class="line">        └─....</span><br></pre></td></tr></table></figure>
+
+<h3 id="HelloController"><a href="#HelloController" class="headerlink" title="HelloController"></a>HelloController</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> me.xlui.spring;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.RequestMapping;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.RequestMethod;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.RestController;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">HelloController</span> &#123;</span><br><span class="line">    <span class="meta">@RequestMapping(value = &quot;/&quot;, method = RequestMethod.GET)</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">index</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;&lt;html&gt;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;&lt;head&gt;&lt;title&gt;Test Page&lt;/title&gt;&lt;/head&gt;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;&lt;body&gt;&lt;div align=\&quot;center\&quot;&gt;Hello World!&lt;/div&gt;&lt;br&gt;&lt;br&gt;&lt;div align=\&quot;center\&quot;&gt;This website shows you have successfully integrated &lt;b&gt;Travis-CI&lt;/b&gt;&lt;/div&gt;&quot;</span> +</span><br><span class="line">                <span class="string">&quot;&lt;/body&gt;&lt;/html&gt;&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> me.xlui.spring;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.junit.runner.RunWith;</span><br><span class="line"><span class="keyword">import</span> org.springframework.boot.test.context.SpringBootTest;</span><br><span class="line"><span class="keyword">import</span> org.springframework.test.context.junit4.SpringRunner;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RunWith(SpringRunner.class)</span></span><br><span class="line"><span class="meta">@SpringBootTest</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">ApplicationTests</span> &#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">contextLoads</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;This is a simple test, and you pass it.&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="添加-travis-yml"><a href="#添加-travis-yml" class="headerlink" title="添加 .travis.yml"></a>添加 .travis.yml</h2><p>Travis 需要根据项目中 <code>.travis.yml</code> 文件中的配置信息来执行相应的动作。</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">language:</span> <span class="string">java</span></span><br><span class="line"><span class="attr">jdk:</span></span><br><span class="line"> <span class="bullet">-</span> <span class="string">openjdk8</span></span><br><span class="line"><span class="attr">install:</span> <span class="string">cd</span> <span class="string">Hello</span> <span class="string">&amp;&amp;</span> <span class="string">mvn</span> <span class="string">install</span> <span class="string">-DskipTests=true</span> <span class="string">-Dmaven.javadoc.skip=true</span></span><br><span class="line"><span class="attr">script:</span> <span class="string">mvn</span> <span class="string">test</span></span><br></pre></td></tr></table></figure>
+
+<p>注意 <strong>install</strong> 的一行，根据目录树，我们的项目是在 Hello 目录下的，所以 install 的时候需要先切换到 Hello 目录中，否则 Maven 会找不到 <code>pom.xml</code> 进而构建失败。</p>
+<h2 id="触发构建"><a href="#触发构建" class="headerlink" title="触发构建"></a>触发构建</h2><p>提交并 push 到 GitHub 后，Travis就会自动构建这个 Maven 工程，可以在 Travis 上看到构建结果和过程中的详细输出：</p>
+<p><img src="/img/tech/travis-build.png" alt="Travis Build" title="Travis Build"></p>
+<h2 id="自动部署"><a href="#自动部署" class="headerlink" title="自动部署"></a>自动部署</h2><p>现在 Travis 已经可以根据我们的提交自动执行构建过程了，下一步就是部署到远程服务器。 Travis 提供 <code>after_success</code> 来实现这个步骤。</p>
+<p>不过在此之前有一件事需要处理，因为我们要部署到服务器，势必需要 Travis 登录远程服务器，因为是开源项目，我们应该怎么解决登录密码问题？</p>
+<h3 id="加密登录密码"><a href="#加密登录密码" class="headerlink" title="加密登录密码"></a>加密登录密码</h3><p>Travis Docs 提供了这个问题的<a target="_blank" rel="noopener" href="https://docs.travis-ci.com/user/encrypting-files/">解决方案</a>，我们一起来实践一下：</p>
+<p><strong>以下操作完全是在本地！！！</strong></p>
+<p>首先通过 ruby 的 gem 安装 travis：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 安装 ruby</span></span><br><span class="line"><span class="built_in">sudo</span> yum install ruby ruby-devel</span><br><span class="line"><span class="comment"># 更新 gem</span></span><br><span class="line"><span class="built_in">sudo</span> gem update --system</span><br><span class="line"><span class="comment"># 添加 ruby-china 源</span></span><br><span class="line"><span class="built_in">sudo</span> gem sources --add https://gems.ruby-china.org/</span><br><span class="line"><span class="comment"># 安装 travis</span></span><br><span class="line"><span class="built_in">sudo</span> gem install travis</span><br></pre></td></tr></table></figure>
+
+<p>接下来在命令行登录 travis：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">$ travis login</span><br><span class="line">We need your GitHub login to identify you.</span><br><span class="line">This information will not be sent to Travis CI, only to api.github.com.</span><br><span class="line">The password will not be displayed.</span><br><span class="line"></span><br><span class="line">Try running with --github-token or --auto <span class="keyword">if</span> you don<span class="string">&#x27;t want to enter your password anyway.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Username: xlui</span></span><br><span class="line"><span class="string">Password for xlui: *********************</span></span><br><span class="line"><span class="string">Two-factor authentication code for xlui: ******</span></span><br><span class="line"><span class="string">Successfully logged in as xlui!</span></span><br></pre></td></tr></table></figure>
+
+<p>输入 GitHub 用户名、密码、两步认证码（如果开启了的话）。</p>
+<p>将目录切换到项目根目录，因为我们要让 travis 远程登录自己的服务器，所以需要将本地保存的 SSH 私钥进行加密处理。（默认大家都是通过 ssh 登录服务器）</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> test-travis-ci/</span><br><span class="line">$ travis encrypt-file ~/.ssh/id_rsa --add</span><br><span class="line">Detected repository as xlui/test-travis-ci, is this correct? |<span class="built_in">yes</span>| <span class="built_in">yes</span></span><br><span class="line">encrypting ~/.ssh/id_rsa <span class="keyword">for</span> xlui/test-travis-ci</span><br><span class="line">storing result as id_rsa.enc</span><br><span class="line">storing secure <span class="built_in">env</span> variables <span class="keyword">for</span> decryption</span><br><span class="line"></span><br><span class="line">Make sure to add id_rsa.enc to the git repository.</span><br><span class="line">Make sure not to add ~/.ssh/id_rsa to the git repository.</span><br><span class="line">Commit all changes to your .travis.yml.</span><br></pre></td></tr></table></figure>
+
+<p>这个时候查看 <code>.travis.yml</code> 会发现多出了几行：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">before_install:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">openssl</span> <span class="string">aes-256-cbc</span> <span class="string">-K</span> <span class="string">$encrypted_9655a05d2431_key</span> <span class="string">-iv</span> <span class="string">$encrypted_9655a05d2431_iv</span></span><br><span class="line">  <span class="string">-in</span> <span class="string">id_rsa.enc</span> <span class="string">-out</span> <span class="string">~\/.ssh/id_rsa</span> <span class="string">-d</span></span><br></pre></td></tr></table></figure>
+
+<p>为了保证权限正常，我们多加一行设置：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">before_install:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">openssl</span> <span class="string">aes-256-cbc</span> <span class="string">-K</span> <span class="string">$encrypted_9655a05d2431_key</span> <span class="string">-iv</span> <span class="string">$encrypted_9655a05d2431_iv</span></span><br><span class="line">  <span class="string">-in</span> <span class="string">id_rsa.enc</span> <span class="string">-out</span> <span class="string">~/.ssh/id_rsa</span> <span class="string">-d</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">chmod</span> <span class="number">600</span> <span class="string">~/.ssh/id_rsa</span></span><br></pre></td></tr></table></figure>
+
+<p>同时，因为 travis 第一次登录远程服务器的时候会出现 SSH 主机验证，我们无法控制交互，所以要添加 addons 配置：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">addons:</span></span><br><span class="line">  <span class="attr">ssh_known_hosts:</span> <span class="string">your_ip_addr:port</span></span><br></pre></td></tr></table></figure>
+
+<p>注意，如果你的服务器 ssh 端口是开在 <code>22</code> 的（<strong>强烈不推荐</strong>），上面的值可以只是 <code>your_ip_addr</code>。如果不是开在 22 端口，就要按照上面的格式自己填充。</p>
+<p>这样配置完成后，travis 就可以免密登录自己的服务器了。</p>
+<h3 id="部署脚本"><a href="#部署脚本" class="headerlink" title="部署脚本"></a>部署脚本</h3><p>既然已经可以免密登录服务器了，那么我们写一个部署脚本，在登录的时候自动执行即可。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">echo</span> <span class="string">&quot;Auto Deploy Success&quot;</span> &gt;&gt; a.log</span><br></pre></td></tr></table></figure>
+
+<p>记得要给脚本添加执行权限（x）。</p>
+<h3 id="执行部署脚本"><a href="#执行部署脚本" class="headerlink" title="执行部署脚本"></a>执行部署脚本</h3><p>在 <code>.travis.yml</code> 中添加：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">after_success:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">ssh</span> <span class="string">your-username@your_ip_addr</span> <span class="string">-p</span> <span class="string">your_port</span> <span class="string">&quot;./your_shell-script.sh&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>将其中的 <code>your-username</code>, <code>your_id_addr</code>, <code>your_port</code>, <code>your_shell_script</code> 替换成自己的即可。</p>
+<h2 id="自动部署项目到-Tomcat"><a href="#自动部署项目到-Tomcat" class="headerlink" title="自动部署项目到 Tomcat"></a>自动部署项目到 Tomcat</h2><p>上面的设置完成后，我们已经可以让 travis 在测试完成后自动执行服务器上的脚本了，如果想自动部署到 Tomcat 我们只需要自己编写脚本即可。因为各自使用的 Tomcat 配置都有差别，就不再举例。</p>
+<h2 id="在项目中添加-badge"><a href="#在项目中添加-badge" class="headerlink" title="在项目中添加 badge"></a>在项目中添加 badge</h2><p>点击 Travis 网站中 <code>buid</code> badge，选择 Markdown，将代码复制到项目 README 中即可看到 <code>build:passing</code> 的Badge。</p>
+<p><img src="/img/tech/travis-badge.png" alt="Travis Badge" title="Travis Badge"></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.akise.app">Aki Akise</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.akise.app/posts/travis-tomcat/">https://blog.akise.app/posts/travis-tomcat/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.akise.app" target="_blank">AkiAkise's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/java/">java</a><a class="post-meta__tags" href="/tags/ci/">ci</a></div><div class="post-share"><div class="social-share" data-image="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/delayed-task-queue/" title="聊聊延时任务队列"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">聊聊延时任务队列</div></div><div class="info-2"><div class="info-item-1">延时队列，顾名思义，是为了让一些任务不立即执行，放到队列里面等到特定时间后再执行。常用的场景有：  订单一直处于未支付状态，需要及时关闭订单，并退还库存 用户通过遥控设备控制智能设备在指定时间进行工作 eFuture 中未来邮件需要在用户指定的时间点发送    eFuture 是我最近刚完成的一个项目，主要目的是提供“未来邮件”的服务。其中，邮件需要被存储并且需要在特定时间点发送。于是我就需要一个延时队列来保存发信任务，并在指定时间由程序消费任务，从而发送邮件。 对于 eFuture 来说，有两件事是最重要的：  未来邮件在延时任务队列中保存，并且不会因为系统故障（如突发停机）而丢失 未来邮件需要在指定日期被取出并消费掉（发送出）  这两点需求意味着，提供延时任务的组件需要具备容灾能力，所以常用的 Java 内部的实现就不行了（虽说我也没用 Java 来写这个项目）。一番搜索之后，发现常用的实现有两个符合我的要求：RabbitMQ 与 Redis。 RabbitMQRabbitMQ 本身并没有直接支持延时队列功能，但是我们可以通过 RabbitMQ...</div></div></div></a><a class="pagination-related" href="/posts/compiling-principle-chomsky/" title="编译原理之 Chomsky 文法的判断 —— Java 实现"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">编译原理之 Chomsky 文法的判断 —— Java 实现</div></div><div class="info-2"><div class="info-item-1">文法的定义和记号 $$ G &#x3D; (V_N, V_T, P, S) \qquad (V_N \cap V_T &#x3D; \varnothing, V_N \cup V_T &#x3D; V) $$ 是 N.Chomsky 在 1956 年描述形式语言时首先给出的。同时，Chomsky 还对产生式的形式给以不同的限制而定义了四类基本的文法，分别称之为 0 型文法，1 型文法，2 型文法和 3 型文法。   明确定义 0 型文法：对任一产生式 $\alpha \to \beta$，都有 $\alpha \in V^+, \quad \beta \in V^*$ 1 型文法：对任一产生式 $\alpha \to \beta$，都有 $\mid\beta\mid \ge \mid\alpha\mid, \quad \alpha,\beta \in V^+$，仅仅 $\alpha \to \epsilon$ 除外 2 型文法：对任一产生式 $A \to \beta$，都有 $A \in V_N, \quad \beta \in V^+$ 3 型文法：任一产生式都形如 $A...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="giscus-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/website/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Aki Akise</div><div class="author-info-description">akiakise 的技术博客</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">12</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">20</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/akiakise"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://stackoverflow.com/users/7944150/aki-akise" target="_blank" title="Stack Overflow"><i class="fab fa-stack-overflow" style="color: #e7700d;"></i></a><a class="social-icon" href="mailto:akiakise@outlook.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Take it easy to comment or discuss / 欢迎评论或讨论</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B3%A8%E5%86%8C%E9%85%8D%E7%BD%AE-Travis"><span class="toc-number">1.</span> <span class="toc-text">注册配置 Travis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E9%A1%B9%E7%9B%AE"><span class="toc-number">2.</span> <span class="toc-text">创建项目</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E6%A0%91"><span class="toc-number">2.1.</span> <span class="toc-text">项目目录树</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#HelloController"><span class="toc-number">2.2.</span> <span class="toc-text">HelloController</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%8B%E8%AF%95"><span class="toc-number">2.3.</span> <span class="toc-text">测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0-travis-yml"><span class="toc-number">3.</span> <span class="toc-text">添加 .travis.yml</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%A6%E5%8F%91%E6%9E%84%E5%BB%BA"><span class="toc-number">4.</span> <span class="toc-text">触发构建</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2"><span class="toc-number">5.</span> <span class="toc-text">自动部署</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%A0%E5%AF%86%E7%99%BB%E5%BD%95%E5%AF%86%E7%A0%81"><span class="toc-number">5.1.</span> <span class="toc-text">加密登录密码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E8%84%9A%E6%9C%AC"><span class="toc-number">5.2.</span> <span class="toc-text">部署脚本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%89%A7%E8%A1%8C%E9%83%A8%E7%BD%B2%E8%84%9A%E6%9C%AC"><span class="toc-number">5.3.</span> <span class="toc-text">执行部署脚本</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%8A%A8%E9%83%A8%E7%BD%B2%E9%A1%B9%E7%9B%AE%E5%88%B0-Tomcat"><span class="toc-number">6.</span> <span class="toc-text">自动部署项目到 Tomcat</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E9%A1%B9%E7%9B%AE%E4%B8%AD%E6%B7%BB%E5%8A%A0-badge"><span class="toc-number">7.</span> <span class="toc-text">在项目中添加 badge</span></a></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><div id="footer-wrap"><div class="copyright">&copy;2017 - 2024 By Aki Akise</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.isShuoshuo
+  const option = {"data-category":"Announcements","data-mapping":"title","data-input-position":"bottom"}
+
+  const getGiscusTheme = theme => theme === 'dark' ? 'dark' : 'light'
+
+  const createScriptElement = config => {
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => {
+      ele.setAttribute(key, value)
+    })
+    return ele
+  }
+
+  const loadGiscus = (el = document, key) => {
+    const mappingConfig = isShuoshuo
+      ? { 'data-mapping': 'specific', 'data-term': key }
+      : { 'data-mapping': (option && option['data-mapping']) || 'pathname' }
+
+    const giscusConfig = {
+      src: 'https://giscus.app/client.js',
+      'data-repo': 'akiakise/blog.akise.app',
+      'data-repo-id': 'R_kgDOLkT3kg',
+      'data-category-id': 'DIC_kwDOLkT3ks4CeK_U',
+      'data-theme': getGiscusTheme(document.documentElement.getAttribute('data-theme')),
+      'data-reactions-enabled': '1',
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      ...mappingConfig
+    }
+
+    const scriptElement = createScriptElement(giscusConfig)
+
+    el.querySelector('#giscus-wrap').appendChild(scriptElement)
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGiscus = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const changeGiscusTheme = theme => {
+    const iframe = document.querySelector('#giscus-wrap iframe')
+    if (iframe) {
+      const message = {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(theme)
+          }
+        }
+      }
+      iframe.contentWindow.postMessage(message, 'https://giscus.app')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeGiscusTheme, 'giscus')
+
+  if (isShuoshuo) {
+    'Giscus' === 'Giscus'
+      ? window.shuoshuoComment = { loadComment: loadGiscus }
+      : window.loadOtherComment = loadGiscus
+    return
+  }
+
+  if ('Giscus' === 'Giscus' || !false) {
+    if (false) btf.loadComment(document.getElementById('giscus-wrap'), loadGiscus)
+    else loadGiscus()
+  } else {
+    window.loadOtherComment = loadGiscus
+  }
+})()</script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
