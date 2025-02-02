@@ -1,0 +1,307 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>聊聊延时任务队列 | AkiAkise's Blog</title><meta name="author" content="Aki Akise"><meta name="copyright" content="Aki Akise"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="延时队列，顾名思义，是为了让一些任务不立即执行，放到队列里面等到特定时间后再执行。常用的场景有：  订单一直处于未支付状态，需要及时关闭订单，并退还库存 用户通过遥控设备控制智能设备在指定时间进行工作 eFuture 中未来邮件需要在用户指定的时间点发送">
+<meta property="og:type" content="article">
+<meta property="og:title" content="聊聊延时任务队列">
+<meta property="og:url" content="https://blog.akise.app/posts/delayed-task-queue/index.html">
+<meta property="og:site_name" content="AkiAkise&#39;s Blog">
+<meta property="og:description" content="延时队列，顾名思义，是为了让一些任务不立即执行，放到队列里面等到特定时间后再执行。常用的场景有：  订单一直处于未支付状态，需要及时关闭订单，并退还库存 用户通过遥控设备控制智能设备在指定时间进行工作 eFuture 中未来邮件需要在用户指定的时间点发送">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2018-10-08T06:38:01.000Z">
+<meta property="article:modified_time" content="2025-02-02T05:21:39.484Z">
+<meta property="article:author" content="Aki Akise">
+<meta property="article:tag" content="queue">
+<meta property="article:tag" content="redis">
+<meta property="article:tag" content="rabbitmq">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "聊聊延时任务队列",
+  "url": "https://blog.akise.app/posts/delayed-task-queue/",
+  "image": "https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg",
+  "datePublished": "2018-10-08T06:38:01.000Z",
+  "dateModified": "2025-02-02T05:21:39.484Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Aki Akise",
+      "url": "https://blog.akise.app"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicons/favicon.ico"><link rel="canonical" href="https://blog.akise.app/posts/delayed-task-queue/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><meta name="google-site-verification" content="M-QntbXhztoT9bBBHMYL_RgY4ei4ifWoFPnUhDhyqc8"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '聊聊延时任务队列',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="AkiAkise's Blog" type="application/atom+xml">
+</head><body><div id="web_bg" style="background-image: url(url(/img/website/cover.jpg));"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/website/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">AkiAkise's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">聊聊延时任务队列</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">聊聊延时任务队列</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2018-10-08T06:38:01.000Z" title="发表于 2018-10-08 14:38:01">2018-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-02-02T05:21:39.484Z" title="更新于 2025-02-02 13:21:39">2025-02-02</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Technology/">Technology</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;It has been&quot;,&quot;messageNext&quot;:&quot;days since the last update, the content of the article may be outdated.&quot;,&quot;postUpdate&quot;:&quot;2025-02-02 13:21:39&quot;}" hidden></div><p>延时队列，顾名思义，是为了让一些任务不立即执行，放到队列里面等到特定时间后再执行。常用的场景有：</p>
+<ul>
+<li>订单一直处于未支付状态，需要及时关闭订单，并退还库存</li>
+<li>用户通过遥控设备控制智能设备在指定时间进行工作</li>
+<li>eFuture 中未来邮件需要在用户指定的时间点发送</li>
+</ul>
+<span id="more"></span>
+
+<p><a target="_blank" rel="noopener" href="https://github.com/xlui/eFuture/">eFuture</a> 是我最近刚完成的一个项目，主要目的是提供“未来邮件”的服务。其中，邮件需要被存储并且需要在特定时间点发送。于是我就需要一个延时队列来保存发信任务，并在指定时间由程序消费任务，从而发送邮件。</p>
+<p>对于 eFuture 来说，有两件事是最重要的：</p>
+<ol>
+<li>未来邮件在延时任务队列中保存，并且不会因为系统故障（如突发停机）而丢失</li>
+<li>未来邮件需要在指定日期被取出并消费掉（发送出）</li>
+</ol>
+<p>这两点需求意味着，提供延时任务的组件需要具备容灾能力，所以常用的 Java 内部的实现就不行了（虽说我也没用 Java 来写这个项目）。一番搜索之后，发现常用的实现有两个符合我的要求：RabbitMQ 与 Redis。</p>
+<h2 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h2><p>RabbitMQ 本身并没有直接支持延时队列功能，但是我们可以通过 RabbitMQ 队列的特性模拟出延时队列的功能。</p>
+<p>RabbitMQ 在创建 Queue 的时候可以指定一个 <code>x-dead-letter-exchange</code> 的选项，指定该选项后， Queue 中过期的消息都将自动转发到相应的 Exchange。我们只需要在对应的 Exchange 上绑定接收过期任务的队列即可。</p>
+<p><img src="/img/tech/dlx.png" alt="Dead Letter eXchange" title="引用一张相关博客的图片"></p>
+<p>Python 代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">import</span> threading</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> pika</span><br><span class="line"></span><br><span class="line">connection = pika.BlockingConnection(pika.ConnectionParameters(</span><br><span class="line">    host=<span class="string">&#x27;localhost&#x27;</span>,</span><br><span class="line">    port=<span class="number">5672</span>,</span><br><span class="line">    virtual_host=<span class="string">&#x27;/&#x27;</span>,</span><br><span class="line">    credentials=pika.PlainCredentials(<span class="string">&#x27;user&#x27;</span>, <span class="string">&#x27;user&#x27;</span>)</span><br><span class="line">))</span><br><span class="line">channel = connection.channel()</span><br><span class="line">logging.basicConfig(</span><br><span class="line">    level=logging.INFO,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">&#x27;%(asctime)s [%(levelname)s] %(message)s&#x27;</span>,</span><br><span class="line">    datefmt=<span class="string">&#x27;%H:%M:%S&#x27;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line">channel.exchange_delete(<span class="string">&#x27;msg.exchange&#x27;</span>)</span><br><span class="line">channel.queue_delete(<span class="string">&#x27;msg.queue.dead&#x27;</span>)</span><br><span class="line">channel.queue_delete(<span class="string">&#x27;msg.queue.task&#x27;</span>)</span><br><span class="line"></span><br><span class="line">channel.exchange_declare(<span class="string">&#x27;msg.exchange&#x27;</span>)</span><br><span class="line">channel.queue_declare(<span class="string">&#x27;msg.queue.dead&#x27;</span>, arguments=&#123;<span class="string">&#x27;x-dead-letter-exchange&#x27;</span>: <span class="string">&#x27;msg.exchange&#x27;</span>&#125;)</span><br><span class="line">channel.queue_declare(<span class="string">&#x27;msg.queue.task&#x27;</span>)</span><br><span class="line">channel.queue_bind(queue=<span class="string">&#x27;msg.queue.task&#x27;</span>, exchange=<span class="string">&#x27;msg.exchange&#x27;</span>, routing_key=<span class="string">&#x27;msg.queue.dead&#x27;</span>)</span><br></pre></td></tr></table></figure>
+
+<p>上面这段代码主要做了：</p>
+<ul>
+<li>利用 <a target="_blank" rel="noopener" href="https://pika.readthedocs.io/en/stable/">pika</a> 连接到 RabbitMQ</li>
+<li>配置 logging</li>
+<li>清除已有的同名 Exchange 与 Queue</li>
+<li>创建 Exchange 与 Queue 并对其中一个队列设置 <code>dead-letter-exchange</code>。</li>
+</ul>
+<p>下面开始测试：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">push</span>():</span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">1</span>, <span class="number">6</span>):</span><br><span class="line">        logging.info(<span class="string">&#x27;push &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(i))</span><br><span class="line">        channel.publish(</span><br><span class="line">            exchange=<span class="string">&#x27;&#x27;</span>, </span><br><span class="line">            routing_key=<span class="string">&#x27;msg.queue.dead&#x27;</span>, </span><br><span class="line">            body=<span class="string">&quot;hello, &#123;&#125;&quot;</span>.<span class="built_in">format</span>(i),</span><br><span class="line">            properties=pika.spec.BasicProperties(content_type=<span class="string">&quot;text/plain&quot;</span>, expiration=<span class="built_in">str</span>(<span class="number">1000</span> * i))</span><br><span class="line">        )</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pop</span>():</span><br><span class="line">    <span class="keyword">for</span> method, properties, body <span class="keyword">in</span> channel.consume(<span class="string">&#x27;msg.queue.task&#x27;</span>):</span><br><span class="line">        logging.info(<span class="string">&#x27;receive &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(body))</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    tPush = threading.Thread(target=push)</span><br><span class="line">    tPop = threading.Thread(target=pop)</span><br><span class="line">    logging.info(<span class="string">&#x27;start push...&#x27;</span>)</span><br><span class="line">    tPush.start()</span><br><span class="line">    logging.info(<span class="string">&#x27;start pop...&#x27;</span>)</span><br><span class="line">    tPop.start()</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>push</code> 依次向 RabbitMQ 的 <code>msg.queue.dead</code> 中发布了 <code>hello, 1</code>, <code>hello, 2</code>, <code>hello, 3</code>, <code>hello, 4</code>, <code>hello, 5</code>，其中 <code>hello, i</code> 的过期时间为 <code>i</code> 秒。</li>
+<li><code>pop</code> 监听 RabbitMQ 的 <code>msg.queue.task</code>，一旦其中有数据就将其取出进行消费。</li>
+</ul>
+<p>运行一下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">15:00:50 [INFO] start push...</span><br><span class="line">15:00:50 [INFO] push 1</span><br><span class="line">15:00:50 [INFO] start pop...</span><br><span class="line">15:00:50 [INFO] push 2</span><br><span class="line">15:00:50 [INFO] push 3</span><br><span class="line">15:00:50 [INFO] push 4</span><br><span class="line">15:00:50 [INFO] push 5</span><br><span class="line">15:00:51 [INFO] receive b<span class="string">&#x27;hello, 1&#x27;</span></span><br><span class="line">15:00:52 [INFO] receive b<span class="string">&#x27;hello, 2&#x27;</span></span><br><span class="line">15:00:53 [INFO] receive b<span class="string">&#x27;hello, 3&#x27;</span></span><br><span class="line">15:00:54 [INFO] receive b<span class="string">&#x27;hello, 4&#x27;</span></span><br><span class="line">15:00:55 [INFO] receive b<span class="string">&#x27;hello, 5&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>看起来我们似乎成功实现了延迟任务队列，在上面的测试用例下这个队列也工作的很好。但是，上面的实现中却有一个致命缺陷，我们把 <code>push</code> 函数稍稍修改一下：</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">push</span>():</span><br><span class="line">    <span class="comment"># for i in range(1, 6):</span></span><br><span class="line">    <span class="keyword">for</span> i <span class="keyword">in</span> <span class="built_in">range</span>(<span class="number">5</span>, <span class="number">0</span>, -<span class="number">1</span>):</span><br><span class="line">        logging.info(<span class="string">&#x27;push &#123;&#125;&#x27;</span>.<span class="built_in">format</span>(i))</span><br><span class="line">        channel.publish(</span><br><span class="line">            exchange=<span class="string">&#x27;&#x27;</span>,</span><br><span class="line">            routing_key=<span class="string">&#x27;msg.queue.dead&#x27;</span>,</span><br><span class="line">            body=<span class="string">&quot;hello, &#123;&#125;&quot;</span>.<span class="built_in">format</span>(i),</span><br><span class="line">            properties=pika.spec.BasicProperties(content_type=<span class="string">&quot;text/plain&quot;</span>, expiration=<span class="built_in">str</span>(<span class="number">1000</span> * i))</span><br><span class="line">        )</span><br></pre></td></tr></table></figure>
+
+<p>再次运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">15:02:47 [INFO] start push...</span><br><span class="line">15:02:47 [INFO] push 5</span><br><span class="line">15:02:47 [INFO] start pop...</span><br><span class="line">15:02:47 [INFO] push 4</span><br><span class="line">15:02:47 [INFO] push 3</span><br><span class="line">15:02:47 [INFO] push 2</span><br><span class="line">15:02:47 [INFO] push 1</span><br><span class="line">15:02:52 [INFO] receive b<span class="string">&#x27;hello, 5&#x27;</span></span><br><span class="line">15:02:52 [INFO] receive b<span class="string">&#x27;hello, 4&#x27;</span></span><br><span class="line">15:02:52 [INFO] receive b<span class="string">&#x27;hello, 3&#x27;</span></span><br><span class="line">15:02:52 [INFO] receive b<span class="string">&#x27;hello, 2&#x27;</span></span><br><span class="line">15:02:52 [INFO] receive b<span class="string">&#x27;hello, 1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，我们只是把插入消息的顺序调整了一下，队列就失去了作用。在新的 <code>push</code> 函数中，我们把过期时间长的任务先插入队列 <code>msg.queue.dead</code>，可以看到，只有在第一个消息过期并被转发到 <code>msg.queue.task</code> 后，后面的过期的消息才会被处理。</p>
+<p>换言之，如果在 <code>msg.queue.dead</code> 中存在先后两个 task，第一个 task 过期时间 10s，第二个过期时间 1s，两个 task 是同时插入队列的。那么只有等第一个 task 过期从队列里移出后，第二个 task 才会被处理，<strong>尽管它在第一个 task 过期前就已经过期了</strong>。从中我们也可以看出 RabbitMQ 对于声明了 <code>x-dead-letter-exchange</code> 的队列中过期消息的处理策略：只检测最前面一个消息是否过期，如果过期就转发到指定的 Exchange，如果没有过期就不作任何处理。</p>
+<p>RabbitMQ 的这种特性显然与我们的需求是相悖的，我们需要的是队列头元素始终是最接近过期的，所以我又将目光转向了 Redis。</p>
+<h2 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h2><p>Redis 内部也没有对延时队列做支持，我们需要使用 Redis 的 <code>zset</code> 来手动实现。ZSet 是 Redis 内置的数据结构之一，其特性是值依据对应的 score 排序，内部使用 HashMap 与 SkipList 来存储数据并保证有序，HashMap 中存放的是值到 score 的映射，SkipList 中存放的是所有值，排序依据是 score。</p>
+<p>利用 Redis 实现延时队列主要是就利用 ZSet，将值设置为 task，而 score 设置为任务执行时间点的 timestamp。然后 <strong>通过比较当前时间戳与 zset 中第一个元素的 score 来判断其是否过期</strong>。</p>
+<p>Python 代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> logging</span><br><span class="line"><span class="keyword">import</span> datetime</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> redis</span><br><span class="line"></span><br><span class="line">QUEUE_KEY = <span class="string">&#x27;delayed task queue&#x27;</span></span><br><span class="line">pool = redis.ConnectionPool(host=<span class="string">&#x27;localhost&#x27;</span>, port=<span class="number">6379</span>, db=<span class="number">0</span>, password=<span class="string">&#x27;&#x27;</span>)</span><br><span class="line">connection = redis.Redis(connection_pool=pool)</span><br><span class="line">logging.basicConfig(</span><br><span class="line">    level=logging.INFO,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">&#x27;%(asctime)s [%(levelname)s] %(message)s&#x27;</span>,</span><br><span class="line">    datefmt=<span class="string">&#x27;%H:%M:%S&#x27;</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">push</span>(<span class="params">message: <span class="built_in">str</span>, date: datetime.datetime</span>):</span><br><span class="line">    connection.zadd(QUEUE_KEY, message, date.timestamp())</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">pop</span>():</span><br><span class="line">    task = connection.zrange(QUEUE_KEY, <span class="number">0</span>, <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">if</span> <span class="keyword">not</span> task:</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">False</span>, <span class="string">&#x27;&#x27;</span></span><br><span class="line">    message = task[<span class="number">0</span>]</span><br><span class="line">    timestamp = connection.zscore(QUEUE_KEY, message)</span><br><span class="line">    now = datetime.datetime.now().timestamp()</span><br><span class="line">    <span class="keyword">if</span> timestamp &lt; now <span class="keyword">or</span> <span class="built_in">abs</span>(timestamp - now) &lt;= <span class="number">1e-6</span>:</span><br><span class="line">        connection.zrem(QUEUE_KEY, message)</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">True</span>, message</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">False</span>, <span class="string">&#x27;&#x27;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    now = datetime.datetime.now()</span><br><span class="line">    logging.info(<span class="string">&#x27;push hello 1&#x27;</span>)</span><br><span class="line">    <span class="comment"># 3 秒后过期</span></span><br><span class="line">    push(<span class="string">&#x27;hello 1&#x27;</span>, now + datetime.timedelta(seconds=<span class="number">3</span>))</span><br><span class="line">    logging.info(<span class="string">&#x27;push hello 2&#x27;</span>)</span><br><span class="line">    <span class="comment"># 7 秒后过期</span></span><br><span class="line">    push(<span class="string">&#x27;hello 2&#x27;</span>, now + datetime.timedelta(seconds=<span class="number">7</span>))</span><br><span class="line">    <span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">        boolean, message = pop()</span><br><span class="line">        <span class="keyword">if</span> boolean:</span><br><span class="line">            logging.info(message)</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>代码意思应该很明了，我们运行上述代码：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">15:30:17 [INFO] push hello 1</span><br><span class="line">15:30:17 [INFO] push hello 2</span><br><span class="line">15:30:20 [INFO] b<span class="string">&#x27;hello 1&#x27;</span></span><br><span class="line">15:30:24 [INFO] b<span class="string">&#x27;hello 2&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>修改两个 task 的过期时间：</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">now = datetime.datetime.now()</span><br><span class="line">logging.info(<span class="string">&#x27;push hello 1&#x27;</span>)</span><br><span class="line"><span class="comment"># 7 秒后过期</span></span><br><span class="line">push(<span class="string">&#x27;hello 1&#x27;</span>, now + datetime.timedelta(seconds=<span class="number">7</span>))</span><br><span class="line">logging.info(<span class="string">&#x27;push hello 2&#x27;</span>)</span><br><span class="line"><span class="comment"># 3 秒后过期</span></span><br><span class="line">push(<span class="string">&#x27;hello 2&#x27;</span>, now + datetime.timedelta(seconds=<span class="number">3</span>))</span><br></pre></td></tr></table></figure>
+
+<p>然后再次运行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">15:33:12 [INFO] push hello 1</span><br><span class="line">15:33:12 [INFO] push hello 2</span><br><span class="line">15:33:15 [INFO] b<span class="string">&#x27;hello 2&#x27;</span></span><br><span class="line">15:33:19 [INFO] b<span class="string">&#x27;hello 1&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>可以看到，如我们预期正确的执行了。</p>
+<p>在代码中 <code>while True</code> 无限循环尝试取出元素是对 CPU 资源的一种浪费，同时也给 Redis 产生了不小的压力，我们可以放缓速度，比如每秒检测一次：</p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> <span class="literal">True</span>:</span><br><span class="line">    time.sleep(<span class="number">1</span>)</span><br><span class="line">    boolean, message = pop()</span><br></pre></td></tr></table></figure>
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>除了文中提到的两种实现方式，延时队列还可以使用数据库定期轮询、DelayQueue、Timer、时间轮、Quartz 等方式实现，本文中没有讨论这些，等将来碰到相关使用场景后，或许会填这个坑 :)</p>
+<p>使用 Redis 作为延时任务队列的实现，在具体应用的时候我们需要开启 Redis 的持久化，最好两种方式同时开启，同时定期备份 Redis 持久化文件，最大程度避免任务丢失。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.akise.app">Aki Akise</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.akise.app/posts/delayed-task-queue/">https://blog.akise.app/posts/delayed-task-queue/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.akise.app" target="_blank">AkiAkise's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/queue/">queue</a><a class="post-meta__tags" href="/tags/redis/">redis</a><a class="post-meta__tags" href="/tags/rabbitmq/">rabbitmq</a></div><div class="post-share"><div class="social-share" data-image="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/travis-tomcat/" title="利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat</div></div><div class="info-2"><div class="info-item-1">   上一个项目的部署测试流程是：本地写完，本地测试，打包为 war 上传到服务器，服务器部署到 Tomcat 指定目录下，重启 Tomcat。这一套流程下来少说十分钟，而且如果刚上传完发现有 bug 的话，还要本地改完重新再来一遍。 重复这样的过程让人心神俱疲，好在现在已经有成熟的解决方案如 Travis CI、Jenkins等，今天我们就尝试着在 Java Web 项目中运用 Travis CI 来自动测试、部署、重启。 Travis CI 是软件开发领域一个在线的、分布式的持续集成服务，它与 GitHub 的协作相当紧密，并且对开源项目免费。 注册配置 Travis到 Travis 的官网 https://travis-ci.org 注册登录，其实是用 GitHub 做第三方授权登录，十分简单。  注册成功后进入个人 Profile 页，选择一个需要集成 Travis CI 的项目，开启 Build 即可。 创建项目本文我们以一个简单的 Spring Boot...</div></div></div></a><a class="pagination-related" href="/posts/maven-scope/" title="Maven 中的 Scope"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Maven 中的 Scope</div></div><div class="info-2"><div class="info-item-1">Maven 中 scope 的取值一共有 compile、test、runtime、provided、system 这几种，其实没有必要专门写一篇博客来讲。但是最近遇到了一个相关的坑，其实也不能说是坑，主要原因是自己对这些东西一知半解，所以还是有必要深究一下。   compilecompile 是默认的 scope，即不显式声明条件下 scope 就是 compile。compile 表示该依赖需要参与项目编译、测试、运行等所有步骤中，是最强的依赖，打包时通常需要包含进去。 testtest 表示依赖项目仅仅参与测试相关的工作，包含测试代码的编译、执行，但是原项目的编译、运行均不参与其中。 runtimeruntime 表示依赖不会参与项目的编译，不过会参与到后续的测试与运行环节中。与 compile 相比只是少了编译阶段，那为什么要提供这个 scope 呢？ StackOverflow 上有一个经典回答：https://stackoverflow.com/a/12273576/7944150。简单翻译下，声明 scope 为 runtime...</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="giscus-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/website/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Aki Akise</div><div class="author-info-description">akiakise 的技术博客</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/akiakise"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://stackoverflow.com/users/7944150/aki-akise" target="_blank" title="Stack Overflow"><i class="fab fa-stack-overflow" style="color: #e7700d;"></i></a><a class="social-icon" href="mailto:akiakise@outlook.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Take it easy to comment or discuss / 欢迎评论或讨论</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#RabbitMQ"><span class="toc-number">1.</span> <span class="toc-text">RabbitMQ</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Redis"><span class="toc-number">2.</span> <span class="toc-text">Redis</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">3.</span> <span class="toc-text">总结</span></a></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><div id="footer-wrap"><div class="copyright">&copy;2017 - 2025 By Aki Akise</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"data-category":"Announcements","data-mapping":"title","data-input-position":"bottom"}
+
+  const getGiscusTheme = theme => theme === 'dark' ? 'dark' : 'light'
+
+  const createScriptElement = config => {
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => {
+      ele.setAttribute(key, value)
+    })
+    return ele
+  }
+
+  const loadGiscus = (el = document, key) => {
+    const mappingConfig = isShuoshuo
+      ? { 'data-mapping': 'specific', 'data-term': key }
+      : { 'data-mapping': (option && option['data-mapping']) || 'pathname' }
+
+    const giscusConfig = {
+      src: 'https://giscus.app/client.js',
+      'data-repo': 'akiakise/blog.akise.app',
+      'data-repo-id': 'R_kgDOLkT3kg',
+      'data-category-id': 'DIC_kwDOLkT3ks4CeK_U',
+      'data-theme': getGiscusTheme(document.documentElement.getAttribute('data-theme')),
+      'data-reactions-enabled': '1',
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      ...mappingConfig
+    }
+
+    const scriptElement = createScriptElement(giscusConfig)
+
+    el.querySelector('#giscus-wrap').appendChild(scriptElement)
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGiscus = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const changeGiscusTheme = theme => {
+    const iframe = document.querySelector('#giscus-wrap iframe')
+    if (iframe) {
+      const message = {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(theme)
+          }
+        }
+      }
+      iframe.contentWindow.postMessage(message, 'https://giscus.app')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeGiscusTheme, 'giscus')
+
+  if (isShuoshuo) {
+    'Giscus' === 'Giscus'
+      ? window.shuoshuoComment = { loadComment: loadGiscus }
+      : window.loadOtherComment = loadGiscus
+    return
+  }
+
+  if ('Giscus' === 'Giscus' || !false) {
+    if (false) btf.loadComment(document.getElementById('giscus-wrap'), loadGiscus)
+    else loadGiscus()
+  } else {
+    window.loadOtherComment = loadGiscus
+  }
+})()</script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>

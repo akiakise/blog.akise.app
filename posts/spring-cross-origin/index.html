@@ -1,0 +1,339 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Spring 中的跨域问题 | AkiAkise's Blog</title><meta name="author" content="Aki Akise"><meta name="copyright" content="Aki Akise"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="项目做前后端分离，遇到了一个很常见的问题：跨域。想着每次遇到都要搜索解决，而且搜到的文章给出的解决方案又千奇百怪，不一定合适，于是萌生了总结一下的想法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring 中的跨域问题">
+<meta property="og:url" content="https://blog.akise.app/posts/spring-cross-origin/index.html">
+<meta property="og:site_name" content="AkiAkise&#39;s Blog">
+<meta property="og:description" content="项目做前后端分离，遇到了一个很常见的问题：跨域。想着每次遇到都要搜索解决，而且搜到的文章给出的解决方案又千奇百怪，不一定合适，于是萌生了总结一下的想法。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2018-11-10T03:56:08.000Z">
+<meta property="article:modified_time" content="2025-02-02T05:21:39.484Z">
+<meta property="article:author" content="Aki Akise">
+<meta property="article:tag" content="java">
+<meta property="article:tag" content="spring">
+<meta property="article:tag" content="cross region">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Spring 中的跨域问题",
+  "url": "https://blog.akise.app/posts/spring-cross-origin/",
+  "image": "https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg",
+  "datePublished": "2018-11-10T03:56:08.000Z",
+  "dateModified": "2025-02-02T05:21:39.484Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Aki Akise",
+      "url": "https://blog.akise.app"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicons/favicon.ico"><link rel="canonical" href="https://blog.akise.app/posts/spring-cross-origin/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><meta name="google-site-verification" content="M-QntbXhztoT9bBBHMYL_RgY4ei4ifWoFPnUhDhyqc8"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":false},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Spring 中的跨域问题',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="AkiAkise's Blog" type="application/atom+xml">
+</head><body><div id="web_bg" style="background-image: url(url(/img/website/cover.jpg));"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/website/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">AkiAkise's Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Spring 中的跨域问题</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav><div id="post-info"><h1 class="post-title">Spring 中的跨域问题</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2018-11-10T03:56:08.000Z" title="发表于 2018-11-10 11:56:08">2018-11-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-02-02T05:21:39.484Z" title="更新于 2025-02-02 13:21:39">2025-02-02</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Java/">Java</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;It has been&quot;,&quot;messageNext&quot;:&quot;days since the last update, the content of the article may be outdated.&quot;,&quot;postUpdate&quot;:&quot;2025-02-02 13:21:39&quot;}" hidden></div><p>项目做前后端分离，遇到了一个很常见的问题：跨域。想着每次遇到都要搜索解决，而且搜到的文章给出的解决方案又千奇百怪，不一定合适，于是萌生了总结一下的想法。</p>
+<span id="more"></span>
+
+<h2 id="问题由来"><a href="#问题由来" class="headerlink" title="问题由来"></a>问题由来</h2><p>跨站 HTTP 请求（Cross-site HTTP Request）是指发起请求的资源所在的 domain 与该请求所指向的 domain 不同的 HTTP 请求。比如，域名 abc(<code>www.abc.com</code>) 的某个标签引用了域名 cde(<code>www.cde.com</code>) 的某资源，域名 abc 的 Web 应用就会导致浏览器发起一个跨站 HTTP 请求。</p>
+<p>这种方式极大地方便了 Web 开发，然而，出于安全考虑（主要是防范 csrf），浏览器会限制从脚本内发起的跨源 HTTP 请求。例如 <code>XMLHttpRequest</code> 和 <code>Fetch API</code> 遵循同源策略。这意味着使用这些 API 的 Web 应用程序只能从加载应用程序的同一个域请求 HTTP 资源。</p>
+<p>然而如果我们在本地开发前后端分离程序，前端请求本机上的后端 API 却由于浏览器限制而请求失败，十分不便。</p>
+<h3 id="CORS"><a href="#CORS" class="headerlink" title="CORS"></a>CORS</h3><p>跨域资源共享（CORS）机制允许 Web 应用服务器进行跨域访问控制，从而使跨域数据传输得以安全进行。现代浏览器支持在 API 容器中（例如 <code>XMLHttpRequest</code> 或 <code>Fetch</code>）使用 CORS，以降低跨域 HTTP 请求中所带来的风险。</p>
+<h3 id="功能概述"><a href="#功能概述" class="headerlink" title="功能概述"></a>功能概述</h3><p>跨域资源共享标准新增了一组 HTTP 首部字段，允许服务器声明哪些源站有权限通过浏览器访问哪些资源。另外，标准要求，对那些可能对服务器产生副作用的 HTTP 请求方法（特别是 GET 以外的 HTTP 请求，或者搭配某些 MIME 类型的 POST 请求），浏览器必须首先用 <code>OPTIONS</code> 方法发起一个<strong>预检请求（Preflight Request，请记住这个概念，后面会经常使用）</strong>，从而获取服务器是否允许该跨域请求。服务器确认允许后，才发起实际的 HTTP 请求。在预检请求的返回中，服务器也可以通知客户端，是否携带身份凭证（包括 Cookie 和 HTTP 认证相关数据）。</p>
+<p>CORS 请求失败会产生错误，但为了安全，在 JavaScript 代码层面是无法获知到底哪里出了问题。你只能查看浏览器控制台以得知具体是哪里出现了错误。</p>
+<h3 id="简单请求"><a href="#简单请求" class="headerlink" title="简单请求"></a>简单请求</h3><p>某些请求不会触发 <a href="#%E9%A2%84%E6%A3%80%E8%AF%B7%E6%B1%82">CORS 预检请求</a>。若请求满足所有下述条件，则请求可视为“简单请求”：</p>
+<ul>
+<li>使用下列方法之一<ul>
+<li>GET</li>
+<li>HEAD</li>
+<li>POST</li>
+</ul>
+</li>
+<li>首部字段在 <strong>对 CORS 安全的首部字段集合</strong> 中：<ul>
+<li>Accept</li>
+<li>Accept-Language</li>
+<li>Content-Language</li>
+<li>Content-Type（下一条为值限制）</li>
+<li>DPR</li>
+<li>Downlink</li>
+<li>Save-Data</li>
+<li>Viewport-Width</li>
+<li>Width</li>
+</ul>
+</li>
+<li>Content-Type 的值为下列三者之一<ul>
+<li>text&#x2F;plain</li>
+<li>multipart&#x2F;form-data</li>
+<li>application&#x2F;x-www-form-urlencoded</li>
+</ul>
+</li>
+<li>请求中的任意 XMLHttpRequestUpload 对象均没有注册任何事件监听器</li>
+<li>请求中没有使用 ReadableStream 对象</li>
+</ul>
+<p>我们可以看到，简单请求的要求是十分严格的，这篇博客我们不会过多讨论简单请求。</p>
+<h3 id="预检请求"><a href="#预检请求" class="headerlink" title="预检请求"></a>预检请求</h3><p>与上一节的简单请求不同，预检请求要求必须首先使用 <code>OPTIONS</code> 方法发起一个预检请求到服务器，以获知服务器是否允许该实际请求。预检请求的使用，可以避免跨域请求对服务器的用户数据产生未预期的影响。</p>
+<h2 id="模拟跨域问题"><a href="#模拟跨域问题" class="headerlink" title="模拟跨域问题"></a>模拟跨域问题</h2><h3 id="浏览器端"><a href="#浏览器端" class="headerlink" title="浏览器端"></a>浏览器端</h3><p>使用 JavaScript 请求本地 API 即可：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE <span class="keyword">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">head</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">title</span>&gt;</span>Web<span class="tag">&lt;/<span class="name">title</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">head</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">label</span> <span class="attr">for</span>=<span class="string">&quot;name&quot;</span>&gt;</span>Name: <span class="tag">&lt;/<span class="name">label</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">id</span>=<span class="string">&quot;name&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text&quot;</span> <span class="attr">value</span>=<span class="string">&quot;xlui&quot;</span> <span class="attr">autofocus</span>/&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">input</span> <span class="attr">type</span>=<span class="string">&quot;button&quot;</span> <span class="attr">onclick</span>=<span class="string">&quot;postData()&quot;</span> <span class="attr">value</span>=<span class="string">&quot;Submit&quot;</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">br</span>&gt;</span><span class="tag">&lt;<span class="name">br</span>&gt;</span><span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">div</span>&gt;</span></span><br><span class="line">            Response:<span class="tag">&lt;<span class="name">br</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">textarea</span> <span class="attr">name</span>=<span class="string">&quot;response&quot;</span> <span class="attr">id</span>=<span class="string">&quot;response&quot;</span> <span class="attr">cols</span>=<span class="string">&quot;30&quot;</span> <span class="attr">rows</span>=<span class="string">&quot;5&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">textarea</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">script</span>&gt;</span><span class="language-javascript"></span></span><br><span class="line"><span class="language-javascript">            <span class="keyword">function</span> <span class="title function_">postData</span>(<span class="params"></span>) &#123;</span></span><br><span class="line"><span class="language-javascript">                <span class="keyword">var</span> i = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&quot;name&quot;</span>).<span class="property">value</span>;</span></span><br><span class="line"><span class="language-javascript">                <span class="keyword">var</span> resp = <span class="variable language_">document</span>.<span class="title function_">getElementById</span>(<span class="string">&quot;response&quot;</span>);</span></span><br><span class="line"><span class="language-javascript">                <span class="variable language_">console</span>.<span class="title function_">log</span>(<span class="string">&#x27;try to submit &#x27;</span> + i);</span></span><br><span class="line"><span class="language-javascript">                <span class="keyword">var</span> xhr = <span class="keyword">new</span> <span class="title class_">XMLHttpRequest</span>();</span></span><br><span class="line"><span class="language-javascript">                xhr.<span class="title function_">open</span>(<span class="string">&#x27;post&#x27;</span>, <span class="string">&#x27;http://127.0.0.1:8080/&#x27;</span>, <span class="literal">true</span>)</span></span><br><span class="line"><span class="language-javascript">                xhr.<span class="title function_">setRequestHeader</span>(<span class="string">&#x27;content-type&#x27;</span>, <span class="string">&#x27;application/json&#x27;</span>)</span></span><br><span class="line"><span class="language-javascript">                xhr.<span class="property">onreadystatechange</span> = <span class="keyword">function</span>(<span class="params"></span>) &#123;</span></span><br><span class="line"><span class="language-javascript">                    <span class="keyword">if</span> (xhr.<span class="property">readyState</span> === <span class="number">4</span>) &#123;</span></span><br><span class="line"><span class="language-javascript">                        <span class="variable language_">console</span>.<span class="title function_">log</span>(xhr.<span class="property">responseText</span>);</span></span><br><span class="line"><span class="language-javascript">                        resp.<span class="property">value</span> = xhr.<span class="property">responseText</span>;</span></span><br><span class="line"><span class="language-javascript">                    &#125;</span></span><br><span class="line"><span class="language-javascript">                &#125;</span></span><br><span class="line"><span class="language-javascript">                xhr.<span class="title function_">send</span>(<span class="title class_">JSON</span>.<span class="title function_">stringify</span>(&#123;</span></span><br><span class="line"><span class="language-javascript">                    <span class="string">&#x27;username&#x27;</span>: i</span></span><br><span class="line"><span class="language-javascript">                &#125;))</span></span><br><span class="line"><span class="language-javascript">            &#125;</span></span><br><span class="line"><span class="language-javascript">        </span><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="服务器端"><a href="#服务器端" class="headerlink" title="服务器端"></a>服务器端</h3><p>从简单做起，我们首先写一个简单的 Servlet 服务器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@WebServlet(name = &quot;MainServlet&quot;, urlPatterns = &quot;/&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">MainServlet</span> <span class="keyword">extends</span> <span class="title class_">HttpServlet</span> &#123;</span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doPost</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException &#123;</span><br><span class="line">        doGet(request, response);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">protected</span> <span class="keyword">void</span> <span class="title function_">doGet</span><span class="params">(HttpServletRequest request, HttpServletResponse response)</span> <span class="keyword">throws</span> ServletException, IOException &#123;</span><br><span class="line">        <span class="comment">// 提取用户名</span></span><br><span class="line">        <span class="type">BufferedReader</span> <span class="variable">reader</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">BufferedReader</span>(<span class="keyword">new</span> <span class="title class_">InputStreamReader</span>(request.getInputStream()));</span><br><span class="line">        String input;</span><br><span class="line">        <span class="type">StringBuilder</span> <span class="variable">builder</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">StringBuilder</span>();</span><br><span class="line">        <span class="keyword">while</span> ((input = reader.readLine()) != <span class="literal">null</span>) &#123;</span><br><span class="line">            builder.append(input);</span><br><span class="line">        &#125;</span><br><span class="line">        input = builder.toString();</span><br><span class="line">        String username;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            username = input.split(<span class="string">&quot;:&quot;</span>)[<span class="number">1</span>].replace(<span class="string">&quot;&#125;&quot;</span>, <span class="string">&quot;&quot;</span>).replace(<span class="string">&quot;\&quot;&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            username = <span class="string">&quot;defaultUsername&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 以上部分代码是为了从浏览器发送的数据中提取出 username 字段，不用认真阅读</span></span><br><span class="line"></span><br><span class="line">        <span class="type">User</span> <span class="variable">user</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">User</span>(username, <span class="string">&quot;pass&quot;</span>);</span><br><span class="line">        response.setContentType(<span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line">        <span class="keyword">try</span> (<span class="type">PrintWriter</span> <span class="variable">out</span> <span class="operator">=</span> response.getWriter()) &#123;</span><br><span class="line">            out.println(user);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Servlet-中的跨域问题"><a href="#Servlet-中的跨域问题" class="headerlink" title="Servlet 中的跨域问题"></a>Servlet 中的跨域问题</h2><p>Servlet 中解决跨域问题很简单，利用 <code>Filter</code> 即可。根据上面的原理，在发送跨域请求之前，浏览器会首先以 <code>OPTIONS</code> 方法发送一个预检请求，如果允许跨域，则继续发送跨域请求，如果不允许，则阻止后续请求，并在 conole 打印错误。</p>
+<p>我们定制 <code>Filter</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@WebFilter(filterName = &quot;CorsFilter&quot;, urlPatterns = &quot;/*&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CorsFilter</span> <span class="keyword">implements</span> <span class="title class_">Filter</span> &#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">destroy</span><span class="params">()</span> &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">doFilter</span><span class="params">(ServletRequest req, ServletResponse resp, FilterChain chain)</span> <span class="keyword">throws</span> ServletException, IOException &#123;</span><br><span class="line">        <span class="type">HttpServletRequest</span> <span class="variable">request</span> <span class="operator">=</span> (HttpServletRequest) req;</span><br><span class="line">        <span class="type">HttpServletResponse</span> <span class="variable">response</span> <span class="operator">=</span> (HttpServletResponse) resp;</span><br><span class="line">        <span class="keyword">if</span> (request.getMethod().equals(<span class="string">&quot;OPTIONS&quot;</span>)) &#123;</span><br><span class="line">            response.setHeader(<span class="string">&quot;Access-Control-Allow-Origin&quot;</span>, <span class="string">&quot;*&quot;</span>);</span><br><span class="line">            response.setHeader(<span class="string">&quot;Access-Control-Allow-Methods&quot;</span>, <span class="string">&quot;OPTIONS, GET, POST, PUT, DELETE&quot;</span>);</span><br><span class="line">            <span class="comment">// -1 表示不缓存，正数值表示缓存预检请求的 秒 数</span></span><br><span class="line">            <span class="comment">// 在预检请求缓存的有效期内，后续的跨域请求不需要再发送预检请求</span></span><br><span class="line">            response.setHeader(<span class="string">&quot;Access-Control-Max-Age&quot;</span>, <span class="string">&quot;-1&quot;</span>); </span><br><span class="line">            response.setHeader(<span class="string">&quot;Access-Control-Allow-Headers&quot;</span>, <span class="string">&quot;Authorization,x-requested-with,content-type&quot;</span>);</span><br><span class="line">            response.setHeader(<span class="string">&quot;Access-Control-Allow-Credentials&quot;</span>, <span class="string">&quot;true&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        response.setHeader(<span class="string">&quot;Access-Control-Allow-Origin&quot;</span>, <span class="string">&quot;*&quot;</span>);</span><br><span class="line">        chain.doFilter(req, resp);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">init</span><span class="params">(FilterConfig config)</span> <span class="keyword">throws</span> ServletException &#123;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对 OPTIONS 的处理上：因为这个请求只是为了检查服务器是否支持跨域，所以我们在设置完相应的 Header 之后可以直接 <code>return</code>，即不需要进行后续处理。</p>
+<p>对其他 HTTP 方法，必须附带 <code>Access-Control-Allow-Origin</code>，否则虽然请求能够成功完成，浏览器会阻止结果的显示。可以注释掉 <code>chain.doFilter</code> 上一行的设置 Header 语句重新运行，在浏览器控制台的 Network 中可以看到请求返回的数据，但是不会显示在网页，并且控制台也会正常报错。说明浏览器阻止了 XMLHttpRequest 结果的显示。</p>
+<h2 id="Spring-Mvc-中的跨域问题"><a href="#Spring-Mvc-中的跨域问题" class="headerlink" title="Spring Mvc 中的跨域问题"></a>Spring Mvc 中的跨域问题</h2><p>解决起来跟上面的类似，还是利用 Filter，不过鉴于这个问题的常见，Spring 为我们提供了一个实现好的 CorsFilter：<code>org.springframework.web.filter.CorsFilter</code>，我们只需要提供必要的参数，然后使用这个 Filter 即可。</p>
+<p>示例代码我使用 Spring Boot + Spring Mvc，下面是 Controller：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WebController</span> &#123;</span><br><span class="line">    <span class="meta">@RequestMapping(value = &quot;/&quot;, method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)</span></span><br><span class="line">    <span class="keyword">public</span> User <span class="title function_">index</span><span class="params">(<span class="meta">@RequestBody</span> <span class="meta">@NotNull</span> User user)</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">User</span>(user.getUsername(), <span class="string">&quot;spring-mvc-pass&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如果不加其他措施我们是不能通过跨域访问 <code>http://127.0.0.1:8080/</code> 的，下面我们将 Spring 提供的 Filter  加入示例项目：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">CorsConfig</span> &#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="keyword">public</span> CorsFilter <span class="title function_">corsFilter</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="type">CorsConfiguration</span> <span class="variable">configuration</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">CorsConfiguration</span>();</span><br><span class="line">        configuration.setAllowedOrigins(List.of(<span class="string">&quot;*&quot;</span>));</span><br><span class="line">        configuration.setAllowedMethods(List.of(<span class="string">&quot;OPTIONS&quot;</span>, <span class="string">&quot;POST&quot;</span>, <span class="string">&quot;GET&quot;</span>));</span><br><span class="line">        configuration.setAllowedHeaders(List.of(<span class="string">&quot;*&quot;</span>));</span><br><span class="line">        configuration.setMaxAge(-<span class="number">1L</span>);</span><br><span class="line">        configuration.setAllowCredentials(<span class="literal">true</span>);</span><br><span class="line">        <span class="keyword">final</span> <span class="type">UrlBasedCorsConfigurationSource</span> <span class="variable">source</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">UrlBasedCorsConfigurationSource</span>();</span><br><span class="line">        source.registerCorsConfiguration(<span class="string">&quot;/**&quot;</span>, configuration);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">CorsFilter</span>(source);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>重新运行项目，已经可以成功从浏览器端发送跨域请求并接收响应了。</p>
+<p>简单查看 CorsFilter 的源码，实现思想与我们自己实现的大体相同。具体来说是：首先通过 <code>AntPathMatcher</code> 获取到我们用 <code>source.registerCorsConfiguration</code> 注册的配置，然后进行预处理：</p>
+<ol>
+<li>如果请求不是 Cors 请求（请求头包含 <code>Origin</code> 字段），则跳过 CorsFilter</li>
+<li>如果有其他 Filter 已经在请求头中添加了 <code>Access-Control-Allow-Origin</code> 字段，跳过 CorsFilter</li>
+<li>如果是同源请求，跳过 CorsFilter</li>
+<li>如果配置为空，并且该请求是预检请求（Preflight Request，请求头有 <code>Origin</code> 字段、请求是 <code>OPTIONS</code> 方法，请求头不包含 <code>Access-Control-Allow-Origin</code> 字段），则拒绝该请求</li>
+<li>如果配置为空，并且该请求不是预检请求，则跳过 CorsFilter</li>
+</ol>
+<p>预处理之后进行跨域权限检查：</p>
+<ol>
+<li>检查 Origin 是否符合配置，不符合则拒绝请求</li>
+<li>检查请求 Method 是否符合配置，不符合则拒绝请求</li>
+<li>检查 Headers 是否符合配置，不符合则拒绝请求</li>
+</ol>
+<p>然后设置响应：</p>
+<ol>
+<li>setAccessControlAllowOrigin</li>
+<li>setAccessControlAllowMethods（仅预检请求）</li>
+<li>setAccessControlAllowHeaders（仅预检请求，并且配置了 Allowed Headers）</li>
+<li>setAccessControlExposeHeaders（配置了 Expose Headers）</li>
+<li>setAccessControlAllowCredentials（配置了 Allowed Credentials）</li>
+<li>setAccessControlMaxAge（仅预检请求，并且配置了 Max Age）</li>
+</ol>
+<p>可以看出来，比起我们自己设计 CorsFilter，Spring 提供的 CorsFilter 还自己根据配置进行了各种检查，而我们在使用的时候只需要传入自定义的配置即可，极大地简化了开发难度同时又增加了灵活性。</p>
+<h2 id="Spring-4-2-以后的跨域问题"><a href="#Spring-4-2-以后的跨域问题" class="headerlink" title="Spring 4.2 以后的跨域问题"></a>Spring 4.2 以后的跨域问题</h2><p>Spring Framework 4.2 版本开始原生支持跨域，相较于之前配置 Filter 的方式，Spring 提供了一个注解 <code>@CorssOrigin</code> 来简化配置。</p>
+<p>我们只需要将 <code>@CrossOrigin</code> 添加在需要的 API 或者 Controller 上，然后设置其参数即可完成配置：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@CrossOrigin(</span></span><br><span class="line"><span class="meta">        origins = &quot;*&quot;,</span></span><br><span class="line"><span class="meta">        methods = &#123;RequestMethod.OPTIONS, RequestMethod.GET, RequestMethod.POST&#125;,</span></span><br><span class="line"><span class="meta">        allowedHeaders = &#123;&quot;Authorization&quot;, &quot;Content-Type&quot;&#125;,</span></span><br><span class="line"><span class="meta">        maxAge = -1L,</span></span><br><span class="line"><span class="meta">        allowCredentials = &quot;false&quot;</span></span><br><span class="line"><span class="meta">)</span></span><br><span class="line"><span class="meta">@RequestMapping(value = &quot;/&quot;, method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)</span></span><br><span class="line"><span class="keyword">public</span> User <span class="title function_">index</span><span class="params">(<span class="meta">@RequestBody</span> <span class="meta">@NotNull</span> User user)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">User</span>(user.getUsername(), <span class="string">&quot;spring-mvc-pass&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>或者直接使用默认配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@CrossOrigin</span></span><br><span class="line"><span class="meta">@RequestMapping(value = &quot;/&quot;, method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)</span></span><br><span class="line"><span class="keyword">public</span> User <span class="title function_">index</span><span class="params">(<span class="meta">@RequestBody</span> <span class="meta">@NotNull</span> User user)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">User</span>(user.getUsername(), <span class="string">&quot;spring-mvc-pass&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>我们还可以通过 Configuration 来手动配置全局规则：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">WebMvcConfig</span> <span class="keyword">implements</span> <span class="title class_">WebMvcConfigurer</span> &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">addCorsMappings</span><span class="params">(CorsRegistry registry)</span> &#123;</span><br><span class="line">        registry.addMapping(<span class="string">&quot;/conf&quot;</span>)</span><br><span class="line">                .allowedOrigins(<span class="string">&quot;*&quot;</span>)</span><br><span class="line">                .allowedMethods(<span class="string">&quot;OPTIONS&quot;</span>, <span class="string">&quot;GET&quot;</span>, <span class="string">&quot;POST&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RequestMapping(value = &quot;/conf&quot;, method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE)</span></span><br><span class="line"><span class="keyword">public</span> User <span class="title function_">config</span><span class="params">(<span class="meta">@RequestBody</span> <span class="meta">@NotNull</span> User user)</span> &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="title class_">User</span>(user.getUsername(), <span class="string">&quot;spring-mvc-pass&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Access_control_CORS">HTTP 访问控制（CORS）</a></li>
+</ul>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://blog.akise.app">Aki Akise</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://blog.akise.app/posts/spring-cross-origin/">https://blog.akise.app/posts/spring-cross-origin/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://blog.akise.app" target="_blank">AkiAkise's Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/java/">java</a><a class="post-meta__tags" href="/tags/spring/">spring</a><a class="post-meta__tags" href="/tags/cross-region/">cross region</a></div><div class="post-share"><div class="social-share" data-image="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related" href="/posts/maven-scope/" title="Maven 中的 Scope"><img class="cover" src="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Maven 中的 Scope</div></div><div class="info-2"><div class="info-item-1">Maven 中 scope 的取值一共有 compile、test、runtime、provided、system 这几种，其实没有必要专门写一篇博客来讲。但是最近遇到了一个相关的坑，其实也不能说是坑，主要原因是自己对这些东西一知半解，所以还是有必要深究一下。   compilecompile 是默认的 scope，即不显式声明条件下 scope 就是 compile。compile 表示该依赖需要参与项目编译、测试、运行等所有步骤中，是最强的依赖，打包时通常需要包含进去。 testtest 表示依赖项目仅仅参与测试相关的工作，包含测试代码的编译、执行，但是原项目的编译、运行均不参与其中。 runtimeruntime 表示依赖不会参与项目的编译，不过会参与到后续的测试与运行环节中。与 compile 相比只是少了编译阶段，那为什么要提供这个 scope 呢？ StackOverflow 上有一个经典回答：https://stackoverflow.com/a/12273576/7944150。简单翻译下，声明 scope 为 runtime...</div></div></div></a><a class="pagination-related" href="/posts/alfred-accurate-calculator/" title="Alfred 精确计算器"><img class="cover" src="/img/2024/alfred-accurate-calculator/alfred-calculator-with-big-number.png" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="info text-right"><div class="info-1"><div class="info-item-1">下一篇</div><div class="info-item-2">Alfred 精确计算器</div></div><div class="info-2"><div class="info-item-1">扩展 Alfred 原生计算器能力</div></div></div></a></nav><hr class="custom-hr"/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div></div><div class="comment-wrap"><div><div id="giscus-wrap"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/website/avatar.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Aki Akise</div><div class="author-info-description">akiakise 的技术博客</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">14</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">24</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/akiakise"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons"><a class="social-icon" href="https://stackoverflow.com/users/7944150/aki-akise" target="_blank" title="Stack Overflow"><i class="fab fa-stack-overflow" style="color: #e7700d;"></i></a><a class="social-icon" href="mailto:akiakise@outlook.com" target="_blank" title="Email"><i class="fas fa-envelope" style="color: #4a7dbe;"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">Take it easy to comment or discuss / 欢迎评论或讨论</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%AE%E9%A2%98%E7%94%B1%E6%9D%A5"><span class="toc-number">1.</span> <span class="toc-text">问题由来</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#CORS"><span class="toc-number">1.1.</span> <span class="toc-text">CORS</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8A%9F%E8%83%BD%E6%A6%82%E8%BF%B0"><span class="toc-number">1.2.</span> <span class="toc-text">功能概述</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%80%E5%8D%95%E8%AF%B7%E6%B1%82"><span class="toc-number">1.3.</span> <span class="toc-text">简单请求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E6%A3%80%E8%AF%B7%E6%B1%82"><span class="toc-number">1.4.</span> <span class="toc-text">预检请求</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E6%8B%9F%E8%B7%A8%E5%9F%9F%E9%97%AE%E9%A2%98"><span class="toc-number">2.</span> <span class="toc-text">模拟跨域问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E7%AB%AF"><span class="toc-number">2.1.</span> <span class="toc-text">浏览器端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF"><span class="toc-number">2.2.</span> <span class="toc-text">服务器端</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Servlet-%E4%B8%AD%E7%9A%84%E8%B7%A8%E5%9F%9F%E9%97%AE%E9%A2%98"><span class="toc-number">3.</span> <span class="toc-text">Servlet 中的跨域问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Spring-Mvc-%E4%B8%AD%E7%9A%84%E8%B7%A8%E5%9F%9F%E9%97%AE%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">Spring Mvc 中的跨域问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Spring-4-2-%E4%BB%A5%E5%90%8E%E7%9A%84%E8%B7%A8%E5%9F%9F%E9%97%AE%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">Spring 4.2 以后的跨域问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="toc-number">6.</span> <span class="toc-text">参考链接</span></a></li></ol></div></div></div></div></main><footer id="footer" style="background-image: url(https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg);"><div id="footer-wrap"><div class="copyright">&copy;2017 - 2025 By Aki Akise</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><a id="to_comment" href="#post-comment" title="前往评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const isShuoshuo = GLOBAL_CONFIG_SITE.pageType === 'shuoshuo'
+  const option = {"data-category":"Announcements","data-mapping":"title","data-input-position":"bottom"}
+
+  const getGiscusTheme = theme => theme === 'dark' ? 'dark' : 'light'
+
+  const createScriptElement = config => {
+    const ele = document.createElement('script')
+    Object.entries(config).forEach(([key, value]) => {
+      ele.setAttribute(key, value)
+    })
+    return ele
+  }
+
+  const loadGiscus = (el = document, key) => {
+    const mappingConfig = isShuoshuo
+      ? { 'data-mapping': 'specific', 'data-term': key }
+      : { 'data-mapping': (option && option['data-mapping']) || 'pathname' }
+
+    const giscusConfig = {
+      src: 'https://giscus.app/client.js',
+      'data-repo': 'akiakise/blog.akise.app',
+      'data-repo-id': 'R_kgDOLkT3kg',
+      'data-category-id': 'DIC_kwDOLkT3ks4CeK_U',
+      'data-theme': getGiscusTheme(document.documentElement.getAttribute('data-theme')),
+      'data-reactions-enabled': '1',
+      crossorigin: 'anonymous',
+      async: true,
+      ...option,
+      ...mappingConfig
+    }
+
+    const scriptElement = createScriptElement(giscusConfig)
+
+    el.querySelector('#giscus-wrap').appendChild(scriptElement)
+
+    if (isShuoshuo) {
+      window.shuoshuoComment.destroyGiscus = () => {
+        if (el.children.length) {
+          el.innerHTML = ''
+          el.classList.add('no-comment')
+        }
+      }
+    }
+  }
+
+  const changeGiscusTheme = theme => {
+    const iframe = document.querySelector('#giscus-wrap iframe')
+    if (iframe) {
+      const message = {
+        giscus: {
+          setConfig: {
+            theme: getGiscusTheme(theme)
+          }
+        }
+      }
+      iframe.contentWindow.postMessage(message, 'https://giscus.app')
+    }
+  }
+
+  btf.addGlobalFn('themeChange', changeGiscusTheme, 'giscus')
+
+  if (isShuoshuo) {
+    'Giscus' === 'Giscus'
+      ? window.shuoshuoComment = { loadComment: loadGiscus }
+      : window.loadOtherComment = loadGiscus
+    return
+  }
+
+  if ('Giscus' === 'Giscus' || !false) {
+    if (false) btf.loadComment(document.getElementById('giscus-wrap'), loadGiscus)
+    else loadGiscus()
+  } else {
+    window.loadOtherComment = loadGiscus
+  }
+})()</script></div><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
