@@ -8,6 +8,7 @@ tags:
   - DDNS
   - FRP
   - Tailscale
+cover: /img/2025/nat-traversal/cover.png
 ---
 
 # 前言
