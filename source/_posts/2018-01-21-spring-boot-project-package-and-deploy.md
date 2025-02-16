@@ -4,6 +4,7 @@ copyright: true
 date: 2018-01-21 21:02:42 +0800
 categories: [Java]
 tags: [java, spring boot, deployment]
+topic: spring
 ---
 
 Spring Boot 项目开发完毕后，需要部署到 tomcat 服务器下，鉴于经常忘记部署流程，特地写了一篇博客来记录。

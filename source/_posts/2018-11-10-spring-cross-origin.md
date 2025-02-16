@@ -4,6 +4,7 @@ copyright: true
 date: 2018-11-10 11:56:08 +0800
 categories: [Java]
 tags: [java, spring, cross region]
+topic: spring
 ---
 
 项目做前后端分离，遇到了一个很常见的问题：跨域。想着每次遇到都要搜索解决，而且搜到的文章给出的解决方案又千奇百怪，不一定合适，于是萌生了总结一下的想法。

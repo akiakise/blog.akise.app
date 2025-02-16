@@ -9,6 +9,8 @@ tags:
   - FRP
   - Tailscale
 cover: /img/2025/nat-traversal/cover.png
+banner: /img/2025/nat-traversal/cover.png
+topic: nas
 ---
 
 # 前言
