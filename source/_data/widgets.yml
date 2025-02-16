@@ -1,0 +1,9 @@
+toc:
+  layout: toc
+  list_number: false
+  min_depth: 1
+  max_depth: 6
+  collapse: false # true / false / auto
+  # 编辑本文按钮
+  edit_this_page: # 从开头开始匹配替换
+    '_posts/': https://github.com/akiakise/blog.akise.app/edit/main/source/_posts/
