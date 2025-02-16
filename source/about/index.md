@@ -6,7 +6,7 @@ comments: false
 
 # 网站搭建
 
-网站基于 Hexo，使用 [Butterfly 主题](https://github.com/jerryc127/hexo-theme-butterfly)
+网站基于 Hexo 搭建，源代码托管在 GitHub，网站部署在 GitHub Pages 上并使用 Cloudflare 加速访问。
 
 # 关于我
 
