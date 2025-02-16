@@ -627,7 +627,7 @@ giscus:
   js:
   option:
     data-category: Announcements
-    data-mapping: title
+    data-mapping: pathname
     data-input-position: bottom
 
 # Remark42
