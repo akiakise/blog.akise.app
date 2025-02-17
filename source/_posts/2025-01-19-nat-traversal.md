@@ -36,10 +36,8 @@ topic: nas
 
 `1.` 增加配置文件：
 
-```bash
-mkdir -p /docker/config/ss
-vim /docker/config/ss/config.json
-```
+{% copy mkdir -p /docker/config/ss prefix:$ %}
+{% copy vim /docker/config/ss/config.json prefix:$ %}
 
 `2.` 编辑配置文件内容：
 
@@ -57,16 +55,12 @@ vim /docker/config/ss/config.json
 
 `3.` 使用 docker 管理服务：
 
-```bash
-docker run --name ss --restart=always -p 12300:12300 -p 12300:12300/udp -v /docker/config/ss:/etc/shadowsocks-rust -d teddysun/shadowsocks-rust
-```
+{% copy docker run --name ss --restart=always -p 12300:12300 -p 12300:12300/udp -v /docker/config/ss:/etc/shadowsocks-rust -d teddysun/shadowsocks-rust prefix:$ %}
 
 `4.` 保险手段（每 30 分钟触发下 ss 启动，如果已启动则命令无效，避免手误将 ss 关掉后无法再连上）：
 
-```bash
-crontab -e
-> */30 * * * * docker start ss
-```
+{% copy crontab -e prefix:$ %}
+{% note 配置内容 */30 * * * * docker start ss %}
 
 上边我使用命令形式方便理解和减少截图，实际上在 NAS 中创建和管理容器是有图形化界面的，不过原理相同。
 
