@@ -24,13 +24,13 @@ topic: nas
 
 本文以我的家庭网络环境为例，一篇文章讲明白这几种内网穿透的配置细节，读者可以结合自身的网络环境选取合适的方案。本文我们将所有的服务（Tailscale、FRP、DDNS）都放置在 NAS 上，以内网穿透访问 Windows 远程桌面作为目标：
 
-![Target](/img/2025/nat-traversal/target.png)
+{% image /img/2025/nat-traversal/target.png 目标 %}
 
 # 内网门锁
 
 多数内网穿透都是直接将内网服务穿透后暴露至公网，虽说内网服务也会有各自的密码，但是总会有未知的安全漏洞、我们也有可能误将无密码/弱密码服务暴露出去，最好还是在内网服务前加一层 VPN。本文除 `Tailscale` 外的方案我们都采用 `shadowsocks` 作为内网服务的入口，预检所有流量，同时也实现流量的端到端加密：
 
-![NAT Traversal with VPN](/img/2025/nat-traversal/with-vpn.png)
+{% image /img/2025/nat-traversal/with-vpn.png NAT Traversal with VPN %}
 
 由于后续的 FRP、DDNS 方案都会用到 ss-server（多个方案可共用一个 ss-server），因此我们首先来创建下 ss-server。
 
@@ -74,7 +74,7 @@ crontab -e
 
 有公网 IP 的情况下，通过 DDNS 实现内网穿透最为简单：
 
-![DDNS](/img/2025/nat-traversal/ddns-ipv4.png)
+{% image /img/2025/nat-traversal/ddns-ipv4.png DDNS+IPv4 %}
 
 ## ss-server 配置
 
@@ -120,7 +120,7 @@ fi
 
 在光猫/路由器（桥接）上配置端口转发，将 `12300` 端口的流量转发至 NAS：
 
-![DDNS Forward](/img/2025/nat-traversal/ddns-forward.png)
+{% image /img/2025/nat-traversal/ddns-forward.png DDNS Forward %}
 
 ## ss-client 配置
 
@@ -146,7 +146,7 @@ DDNS 方案的优点是不需要中转，流量直达家里的设备，能轻松
 
 受限于当前公网 IPv4 越来越难拿到，能给每一粒沙子都分配一个 IP 的 IPv6 成了另一个可行方案：
 
-![DDNS](/img/2025/nat-traversal/ddns-ipv6.png)
+{% image /img/2025/nat-traversal/ddns-ipv6.png DDNS+IPv6 %}
 
 依然是这张图，不过红线上的流量变成了 IPv6。
 
@@ -197,7 +197,7 @@ fi
 
 假设我们的 IPv6 地址为 `2001:2002:2003:2004:1:20ff:fe25:2025`，则对应 EUI-64 地址为 `1:20ff:fe25:2025/::ffff:ffff:ffff:ffff`，将这个地址填入防火墙放行即可：
 
-![IPv6 Firewall Allow](/img/2025/nat-traversal/ipv6-firewall-allow.png)
+{% image /img/2025/nat-traversal/ipv6-firewall-allow.png IPv6 Firewall Allow %}
 
 注意：**千万不要关闭 IPv6 防火墙，除非你明确知道这有什么后果！！！！！**
 
@@ -227,7 +227,7 @@ IPv6 方案的优点与 IPv4 相同，都是流量直达家里的设备，并且
 
 针对无公网 IP 有云服务器的情况，我们通过 FRP 来实现内网穿透：
 
-![FRP](/img/2025/nat-traversal/frp.png)
+{% image /img/2025/nat-traversal/frp.png FRP %}
 
 ## ss-server 配置
 
@@ -346,7 +346,7 @@ Tailscale 的使用相较于其他方案非常简单，而且它不需要公网 
 
 在 [https://tailscale.com/](https://tailscale.com/) 注册账号，并转到 [https://login.tailscale.com/admin/settings/keys](https://login.tailscale.com/admin/settings/keys) 来生成 `auth key` 和 `access token`:
 
-![Tailscale Keys](/img/2025/nat-traversal/tailscale-key.png)
+{% image /img/2025/nat-traversal/tailscale-key.png Tailscale Keys %}
 
 ## NAS 配置
 
@@ -359,13 +359,13 @@ docker run --name tailscale --restart=always --net host --cap-add NET_ADMIN -v /
 
 启动成功后即可在 [Tailscale后台](https://login.tailscale.com/admin/machines) 看到机器上线了：
 
-![Tailscale Machines](/img/2025/nat-traversal/tailscale-machines.png)
+{% image /img/2025/nat-traversal/tailscale-machines.png Tailscale Machines %}
 
 其中 `Subnets` 旁边的感叹号提示我们在 docker 启动时添加的网段还没有真实生效，接下来我们让它生效：
 
-![Tailscale Subnet Config 1](/img/2025/nat-traversal/tailscale-subnet-1.png)
+{% image /img/2025/nat-traversal/tailscale-subnet-1.png Tailscale Subnet Config 1 %}
 
-![Tailscale Subnet Config 2](/img/2025/nat-traversal/tailscale-subnet-2.png)
+{% image /img/2025/nat-traversal/tailscale-subnet-2.png Tailscale Subnet Config 2 %}
 
 这样，当其他设备加入 Tailscale 后就可以通过 `192.168.10.x` 访问 NAS 以及其他内网设备了。
 
@@ -381,7 +381,7 @@ Tailscale 支持的平台相当广泛，客户端只需要登录账号即可完�
 
 我所在的地区是可以下发动态公网 IP 的，所以我主要使用 DDNS + IPv4 的形式，不过我也配置了另外几种方案作为备份，以下是我的家庭网络拓扑：
 
-![My NAT Traversal](/img/2025/nat-traversal/my.png)
+{% image /img/2025/nat-traversal/my.png My NAT Traversal %}
 
 # 总结
 

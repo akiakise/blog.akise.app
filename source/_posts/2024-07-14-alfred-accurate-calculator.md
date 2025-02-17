@@ -14,7 +14,7 @@ banner: /img/2024/alfred-accurate-calculator/alfred-calculator-with-big-number.p
 
 Alfred 自带了一个计算器，可以在激活后直接输入运算符进行计算：
 
-![alfred-calculator-with-big-number](/img/2024/alfred-accurate-calculator/alfred-calculator-with-big-number.png)
+{% image /img/2024/alfred-accurate-calculator/alfred-calculator-with-big-number.png Alfred calculator with big number %}
 
 但是正如上图所示，Alfred 原生的计算器并不能处理大数场景，在公司内部开发时，我们经常需要跟 snowflake 算法生成的 ID 打交道（非常长的数字），因此就经常需要进行大数间的运算。
 
@@ -49,11 +49,11 @@ https://github.com/akiakise/alfred-accurate-calculator/releases/tag/v1.0
 
 呼出 Alfred 菜单后使用 `calc` 前缀激活 workflow，然后输入你的计算语句即可：
 
-![Usage 1](/img/2024/alfred-accurate-calculator/usage-1.png)
+{% image /img/2024/alfred-accurate-calculator/usage-1.png Usage 1 %}
 
-![Usage 2](/img/2024/alfred-accurate-calculator/usage-2.png)
+{% image /img/2024/alfred-accurate-calculator/usage-2.png Usage 2 %}
 
-![Usage 3](/img/2024/alfred-accurate-calculator/usage-3.png)
+{% image /img/2024/alfred-accurate-calculator/usage-3.png Usage 3 %}
 
 ## 源码
 
