@@ -7,3 +7,15 @@ toc:
   # 编辑本文按钮
   edit_this_page: # 从开头开始匹配替换
     '_posts/': https://github.com/akiakise/blog.akise.app/edit/main/source/_posts/
+
+welcome:
+  layout: markdown
+  title: 欢迎光临
+  content: |
+    探索世界的好奇心万岁！
+
+announcement:
+  layout: markdown
+  title: 个性签名
+  content: |
+    Take it easy to comment or discuss / 欢迎评论或讨论

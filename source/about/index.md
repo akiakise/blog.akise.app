@@ -5,11 +5,11 @@ comments: false
 banner: /img/website/cover.jpg
 ---
 
-# 网站搭建
+{% quot 网站搭建 icon:hashtag %}
 
 网站基于 Hexo 搭建，源代码托管在 GitHub，网站部署在 GitHub Pages 上并使用 Cloudflare 加速访问。
 
-# 关于我
+{% quot 关于我 icon:hashtag %}
 
 Coder in Beijing，idea 不少，正在慢慢实现。
 
