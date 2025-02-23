@@ -19,7 +19,7 @@ topic: play
 
 下图来自虚空终端 wiki: [DNS 解析流程](https://wiki.metacubex.one/config/dns/diagram/)
 
-![DNS Resolve](/img/2025/clash-dns-configure/cover.png)
+{% image /img/2025/clash-dns-configure/cover.png DNS Resolve %}
 
 # 配置指南
 
