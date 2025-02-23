@@ -9,11 +9,11 @@ banner: /img/2025/clash-dns-configure/cover.png
 topic: play
 ---
 
-随着互联网技术的发展与广告联盟的互联互通，大家对隐私的重视程度也越来越高，而 DNS 作为网络基础设施，其{% mark 泄露 color:error %}的风险与泄露后导致的问题影响也越来越大。泄露可能涉及的问题主要有：用户通过虚拟专用网络或网络代理请求的域名被记录或审查、用户浏览历史被记录和分析用于广告投放或数据挖掘。同时 ISP 的 DNS 也天生自带污染和和劫持，不推荐使用。
+随着互联网技术的发展与广告联盟的互联互通，大家对隐私的重视程度也越来越高，而 DNS 作为网络基础设施，其{% mark 泄露 color:error %}的风险与泄露后导致的问题影响也越来越大。泄露可能涉及的问题主要有：用户通过虚拟专用网络或网络代理请求的域名被记录或审查、用户浏览历史被记录和分析用于广告投放或数据挖掘。同时 ISP 的 DNS 也天生自带污染和和劫持，并不推荐使用。
 
 {% quot A DNS leak is a security flaw that allows DNS requests to be revealed to ISP DNS servers, despite the use of a VPN service to attempt to conceal them. Although primarily of concern to VPN users, it is also possible to prevent it for proxy and direct internet users. %}
 
-[虚空终端](https://wiki.metacubex.one/)作为开源项目[原神](https://yuanshen.com)的二次开发版本，提供了更强的 DNS 处理能力，通过简单且合理的配置，可以仅最大可能规避 DNS 污染、劫持、泄露问题（不能做 100% 保证，毕竟不清楚还有没有未知的手段）。
+[虚空终端](https://wiki.metacubex.one/)作为开源项目[原神](https://yuanshen.com)的二次开发版本，提供了更强的 DNS 处理能力，通过简单且合理的配置，可以尽最大可能规避 DNS 污染、劫持、泄露问题（不能做 100% 保证，毕竟不清楚还有没有未知的手段）。
 
 # DNS 解析流程
 
@@ -159,31 +159,33 @@ rules:
 
 ## 1. 直接通过 ip 访问
 
-在示例规则中，我们通过 `IP-CIDR,1.2.3.4/32,PROXY,no-resolve` 来实现直接通过 IP 访问 `1.2.3.4` 并且跳过 DNS 解析流程，配置 `no-resolve` 的原因见补充说明。
+直接通过 `1.2.3.4` 访问会命中 `IP-CIDR,1.2.3.4/32,PROXY,no-resolve` 规则，它会跳过 DNS 解析流程并直接交给对应的策略处理（这里配置为 PROXY 策略）。
+
+假设我们同时有一个域名 `example.com` 也指向了 `1.2.3.4`，那我们访问域名的时候并不会走到这条规则，因为规则添加了 `no-resolve` 条件，除非是直接通过 IP 访问，否则直接跳过此规则。
 
 ## 2. 访问境内域名，命中 GEOSITE 规则
 
-当访问的域名命中境内的 `GEOSITE` 规则时，我们将其配置为 `DIRECT` 规则，虚空终端在看到 `DIRECT` 后就会进入 DNS 解析流程（见流程图）。结合配置文件的 DNS 解析流程：
+当访问的境内域名命中 `GEOSITE` 规则时，由于指定了 `DIRECT` 策略，虚空终端会进入 DNS 解析流程，结合配置文件来说流程如下：
 
 1. 查询 DNS 缓存，如果查到，拿出对应的 IP 并直接建立连接
-2. 匹配 `nameserver-policy`，我们将所有的境内规则的 `GEOSITE` 也都配置在了这里，因此肯定会命中这条规则。在 `nameserver-policy` 内容上我们配置了 AliDNS 的 DoT 和 DoH，虚空终端会并发查询这些 nameserver 并返回最快返回的结果
+2. 匹配 `nameserver-policy`，我们将所有的境内规则的 `GEOSITE` 也都配置在了这里，因此肯定会命中这条规则。在 `nameserver-policy` 内容里我们配置了 AliDNS 的 DoT 和 DoH，虚空终端会并发查询这些 nameserver 并返回最快返回的结果
 3. 拿到域名解析结果，直接建立连接，并保存 DNS 缓存
 
 ## 3. 访问境外域名，命中 GEOSITE 规则
 
-当访问的域名命中境外的 `GEOSITE` 规则时，由于指定了 `PROXY` 规则，因此虚空终端会直接将域名解析与请求交给代理节点处理，跳过自身所有的 DNS 解析流程。
+当访问的境外域名命中 `GEOSITE` 规则时，由于指定了 `PROXY` 策略，因此虚空终端会直接将域名解析与请求处理路由到 `PROXY` 节点，跳过自身所有的 DNS 解析流程。
 
 ## 4. 访问任意域名，未命中境内或境外 GEOSITE 规则
 
-由于未命中 `GEOSITE` 规则，因此一路往下走到 `GEOIP` 规则，`GEOIP` 规则判断前需要先拿到域对应的 IP，因此发起一次 DNS 解析流程：
+境内境外 `GEOSITE` 规则未命中时，规则解析一路往下走到 `GEOIP` 规则，`GEOIP` 规则判断前需要先拿到域名对应的 IP，因此虚空终端会发起一次 DNS 解析流程：
 
 1. 查询 DNS 缓存，如果查到，拿出对应的 IP 交给 `GEOIP` 规则判断
-2. 匹配 `nameserver-policy`，我们只配置了境内的策略，因此无法匹配到
-3. 兜底使用 `nameserver`，在内容上我们配置了常用的境外 DoT 和 DoH，并且指定这些 DNS 查询时使用 `PROXY` 节点以加速（境外 DNS 境内直接访问延迟很高），同时配置了 `proxy-server-nameserver` 来避免鸡蛋问题，另外节点如果支持 H3 则尽可能使用 H3（这点存疑，境内到境外 H3 稳定性不确定）
+2. 匹配 `nameserver-policy`，我们在这里配置的 `GEOSITE` 规则跟 `rules` 里用的 `GEOSITE` 规则是一致的，因此也无法命中
+3. 兜底使用 `nameserver`，在内容里我们配置了常用的境外 DoT 和 DoH，并且指定这些 DNS 查询时使用 `PROXY` 节点以加速（境外 DNS 境内直接访问延迟很高），同时配置了 `proxy-server-nameserver` 来避免鸡蛋问题（考虑到解析速度配置成了 AliDNS，无奈之举），另外节点如果支持 H3 则尽可能使用 H3（这点存疑，境内到境外 H3 稳定性不确定）
 4. 拿到域名解析结果，交给 `GEOIP` 规则判断，并保存 DNS 缓存
-5. 如果 `GEOIP` 规则判断直连，直接建立连接，如果 `GEOIP` 规则未命中，则走到兜底代理连接
+5. 如果 `GEOIP` 规则判断直连，则直接建立连接，如果 `GEOIP` 规则未命中，则走到兜底使用代理建立连接
 
-可以看到，我们兜底使用远程节点来解析未命中规则的域名，我个人倾向于假设未命中规则的都是境外域名，都由境外 DNS 解析来避免国内 DNS 保留记录。当然这里也可以改为使用境内 DNS 解析，任君自选。
+可以看到，我们兜底使用远程节点来解析未命中规则的域名，我个人倾向于假设未命中规则的都是境外域名，因此都由境外 DNS 解析来避免国内 DNS 保留记录。当然这里也可以改为使用境内 DNS 解析，两种策略任君自选。
 
 ## 5. 规则修正
 
@@ -191,14 +193,14 @@ rules:
 
 ## 补充说明: default-nameserver、fallback
 
-`default-nameserver`: 用于解析 `nameserver`、`fallback`、`nameserver-policy` 中通过域名指定的 DNS 服务器
-`fallback`: 虚空终端之前 Clash 使用的策略，逻辑比较复杂，不再推荐，使用更加简单易懂的 `nameserver-polify` 替代
+`default-nameserver`: 用于解析 `nameserver`、`fallback`、`nameserver-policy` 中通过域名指定的 DNS 服务器，我们使用 IP 配置 DoT 和 DoH 节点，因此不再需要此配置
+`fallback`: 虚空终端之前 Clash 使用的策略，逻辑比较复杂，不再推荐，使用更加简单易懂的 `nameserver-policy` 替代
 
 ## 补充说明: GEOIP + no-resolve 是错误用法
 
-网上可能存在很多在 `GEOIP,CN,DIRECT` 后加上 `no-resolve` 的，这实际上是一个{% mark 错误 color:error %}的用法，`GEOIP` 类规则就是要解析出 IP 后再进行 IP 判定的，加了 `no-resolve` 后如果不是直接通过 IP 访问的话，这条规则就失效了。
+网上存在很多在 `GEOIP,CN,DIRECT` 后加上 `no-resolve` 的，这实际上是一个{% mark 错误 color:error %}的用法，`GEOIP` 类规则就是要解析出 IP 后再进行 IP 判定的，加了 `no-resolve` 后如果不是直接通过 IP 访问的话，这条规则就失效了。
 
-同时，虚空终端的规则处理流程是从上往下严格有序的，如果遇到了 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等），会尝试进行 DNS 解析拿到 IP 再判断这条规则，如果某个 IP 类规则不带 `no-resolve` 并且放的比较靠前，那么必然会产生多余的 DNS 解析。
+同时，虚空终端的规则处理流程是从上往下严格有序的，如果遇到了 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等）会尝试进行 DNS 解析拿到 IP 再判断这条规则，如果某个 IP 类规则不带 `no-resolve` 并且放的比较靠前，那么必然会产生多余的 DNS 解析。
 
 因此，这里的正确用法是{% mark 将所有的 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等）统一放到域名规则之后 color:green %}，如配置中将所有的 `GEOIP` 规则都放到了最后边，同时针对需要直接指定 IP 访问的（配置示例中为 `1.2.3.4`）规则添加 `no-resolve` 来避免多余的 DNS 解析。
 
