@@ -80,5 +80,5 @@ final MarshallerFactory factory = Marshalling.getProvidedMarshallerFactory("seri
 综合考虑以上几种 scope 的特性，当我们想在 Spring Boot 项目中全局排除某一个依赖时，应该如何处理？
 
 {% folding 查看答案 %}
-答案是在依赖声明时将其直接声明为 <code class="language-plaintext highlighter-rouge">provided</code>，由于 <code class="language-plaintext highlighter-rouge">provided</code> 代表着由 JDK 或者容器提供该依赖，而 Spring Boot 项目本身不需要容器即可运行（或者说它本身已经带了一个容器），所以将依赖设为 <code class="language-plaintext highlighter-rouge">provided</code> 可以确保该依赖不会被编译也不会被打包进最终的 jar/war，从而实现全局排除的效果。
+答案是在依赖声明时将其直接声明为 {% mark provided color:green %}，由于 {% mark provided color:green %} 代表着由 JDK 或者容器提供该依赖，而 Spring Boot 项目本身不需要容器即可运行（或者说它本身已经带了一个容器），所以将依赖设为 {% mark provided color:green %} 可以确保该依赖不会被编译也不会被打包进最终的 jar/war，从而实现全局排除的效果。
 {% endfolding %}
