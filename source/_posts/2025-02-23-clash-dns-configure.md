@@ -128,6 +128,7 @@ rules:
   ## 强制直连
   - GEOSITE,private,DIRECT
   - GEOSITE,onedrive,DIRECT
+  ## @cn 为该规则内的域名在中国大陆有接入点，可直连
   - GEOSITE,microsoft@cn,DIRECT
   - GEOSITE,apple@cn,DIRECT
   - GEOSITE,steam@cn,DIRECT
