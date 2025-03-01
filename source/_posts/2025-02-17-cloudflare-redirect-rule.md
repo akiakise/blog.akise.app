@@ -1,5 +1,6 @@
 ---
 title: 利用 Cloudflare 重定向规则摆脱端口访问服务
+tags: [Cloudflare]
 categories: Technology
 date: 2025-02-17 10:32:09
 description: 在 80/443 端口无法顺畅提供服务时往往需要暴露其他端口，而服务数量多了之后端口记忆也是一个问题，本文通过借助 Cloudflare 的功能来实现“无端口”访问非 80/443 端口的服务。
