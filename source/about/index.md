@@ -3,6 +3,8 @@ title: 关于本站
 date: 2017-07-20 00:00:00
 comments: false
 banner: /img/website/cover.jpg
+menu_id: social
+leftbar: [social, recent]
 ---
 
 {% quot 网站搭建 icon:hashtag %}
