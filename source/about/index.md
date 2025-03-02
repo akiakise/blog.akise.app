@@ -11,7 +11,7 @@ banner: /img/website/cover.jpg
 
 {% quot 关于我 icon:hashtag %}
 
-Coder in Beijing，idea 不少，正在慢慢实现。
+Java 略知一二，Python 略知一二、Golang 略知一二、JavaScript 略知一二、Vue 略知一二、数据库略知一二、分布式系统略知一二。
 
 - Email: <akiakise@outlook.com>
 - GitHub: <https://github.com/akiakise>
