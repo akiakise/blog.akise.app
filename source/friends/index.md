@@ -10,7 +10,7 @@ menu_id: social
 leftbar: [social, recent]
 ---
 
-{% friends api:https://raw.githubusercontent.com/akiakise/issues-json-generator/refs/heads/output/v2/data.json %}
+{% friends api:https://raw.githubusercontent.com/akiakise/blog.akise.app/refs/heads/output/v2/data.json %}
 
 {% note 如果友链失联了？ 友链如果长期失联，可能会被取消！届时 GitHub Issue 的标签也会更新，如果您的网站恢复了，请在申请友链时创建的 [Issue](https://github.com/akiakise/issues-json-generator/issues) 中评论告知。 %}
 
@@ -27,7 +27,7 @@ leftbar: [social, recent]
 
 {% timeline %}
 <!-- node 第一步: 新建 Issue -->
-新建 [GitHub Issue](https://github.com/akiakise/issues-json-generator/issues) 并按照新 Issue 模板填写并提交。
+新建 [GitHub Issue](https://github.com/akiakise/blog.akise.app/issues) 并按照新 Issue 模板填写并提交。
 
 <!-- node 第二步: 添加本站友链 -->
 请将本站添加到您的友链中:
