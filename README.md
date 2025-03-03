@@ -1,6 +1,6 @@
-# This is a forked branch
+# This is a fork branch
 
-Source: https://github.com/xaoxuu/issues-json-generator
+Source Code: https://github.com/xaoxuu/issues-json-generator
 
 # Issues-Json Generator
 
