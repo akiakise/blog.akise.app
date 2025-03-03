@@ -74,7 +74,7 @@ Cloudflare 支持针对请求的 URL 做重定向规则，看起来可以满足�
 
 # 结语
 
-可以看到，Cloudflare 重定向规则还是很强大的，通过简单的配置就让我们对域名的访问流程有了较大的定制化能力，Cloudflare 还在测试一项名为 [Snippets](https://developers.cloudflare.com/rules/snippets/) 来直接通过 JavaScript 代码干涉访问流程，这样会更加简单便捷，不过目前仅限付费用户可用。
+可以看到，Cloudflare 重定向规则还是很强大的，通过简单的配置就让我们对域名的访问流程有了较大的定制化能力，Cloudflare 还在测试一项名为 [Snippets](https://developers.cloudflare.com/rules/snippets/) 的功能来直接通过 JavaScript 代码干涉访问流程，这样会更加简单便捷，不过目前仅限付费用户可用。
 
 {% folding 附言 %}
 为了实现本文中部分 URL 访问 404、其他 URL 访问重定向的效果，我还在规则中另外增加了“URL 结尾不是 test”的规则 😊
