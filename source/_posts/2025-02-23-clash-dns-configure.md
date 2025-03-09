@@ -99,52 +99,70 @@ dns:
     - 'https://45.11.45.11/dns-query#PROXY'
 rule-providers:
   direct:
-    behavior: domain
-    interval: 86400
-    path: ./ruleset/direct.yaml
-    type: http
-    url: https://raw.githubusercontent.com/akiakise/Profiles/refs/heads/main/clash/direct.yaml
+    behavior: classical
+    type: inline
+    payload:
+      # CDN
+      - 'DOMAIN,download-cdn.jetbrains.com'
+      # Clash Dashboard & Converter
+      - 'DOMAIN,clash.razord.top'
+      - 'DOMAIN,yacd.haishan.me'
+      - 'DOMAIN,nexconvert.com'
+      # DDNS
+      - 'DOMAIN-SUFFIX,ip.sb'
+      # time
+      - 'DOMAIN,time.android.com'
   proxy:
-    behavior: domain
-    interval: 86400
-    path: ./ruleset/proxy.yaml
-    type: http
-    url: https://raw.githubusercontent.com/akiakise/Profiles/refs/heads/main/clash/proxy.yaml
+    behavior: classical
+    type: inline
+    payload:
+      # 这些域名虽然在国内有接入点，但是直连体验并不好，因此强制代理
+      - 'DOMAIN,dockerstatic.com'
+      - 'DOMAIN,fonts.googleapis.com'
+      - 'DOMAIN,fonts.gstatic.com'
+      - 'DOMAIN,www.gstatic.com'
   reject:
-    behavior: domain
-    interval: 86400
-    path: ./ruleset/reject.yaml
-    type: http
-    url: https://raw.githubusercontent.com/akiakise/Profiles/refs/heads/main/clash/reject.yaml
+    behavior: classical
+    type: inline
+    payload:
+      # niconico 广告
+      - 'DOMAIN-SUFFIX,ads.nicovideo.jp'
+      # mumu 模拟器广告
+      - 'DOMAIN-SUFFIX,mumu.nie.netease.com'
+      # postman 更新
+      - 'DOMAIN-SUFFIX,dl.pstmn.io'
+      - 'DOMAIN-SUFFIX,sync-v3.getpostman.com'
+      - 'DOMAIN-SUFFIX,getpostman.com'
 rules:
   # 个人规则，1.2.3.4 用作示例
   - IP-CIDR,1.2.3.4/32,PROXY,no-resolve
-  ## 规则修正
+  # 规则修正
   - RULE-SET,reject,REJECT
   - RULE-SET,proxy,PROXY
   - RULE-SET,direct,DIRECT
-  ## 广告过滤
+
+  # 广告过滤
   - GEOSITE,category-ads-all,REJECT
-  ## 强制直连
+  # 强制直连
   - GEOSITE,private,DIRECT
   - GEOSITE,onedrive,DIRECT
-  ## @cn 为该规则内的域名在中国大陆有接入点，可直连
+  # @cn 为该规则内的域名在中国大陆有接入点，可直连
   - GEOSITE,microsoft@cn,DIRECT
   - GEOSITE,apple@cn,DIRECT
   - GEOSITE,steam@cn,DIRECT
   - GEOSITE,google@cn,DIRECT
   - GEOSITE,jetbrains@cn,DIRECT
   - GEOSITE,category-games@cn,DIRECT
-  ## 流媒体
+  # 流媒体
   - GEOSITE,biliintl,国际流媒体
   - GEOSITE,youtube,国际流媒体
-  ## 强制代理
+  # 强制代理
   - GEOSITE,google,PROXY
   - GEOSITE,twitter,PROXY
   - GEOSITE,pixiv,PROXY
   - GEOSITE,category-scholar-!cn,PROXY
   - GEOSITE,geolocation-!cn,PROXY
-  # 强制直连
+  # 兜底强制直连
   - GEOSITE,cn,DIRECT
 
   # GEOIP 规则
@@ -152,6 +170,8 @@ rules:
   - GEOIP,telegram,PROXY
   - GEOIP,JP,PROXY
   - GEOIP,CN,DIRECT
+
+  # 兜底代理
   - MATCH,PROXY
 ```
 
@@ -191,10 +211,14 @@ rules:
 
 规则库不是万能的，因此必然会出现某些域名分流错误的情况，我们通过补充的 `direct`、`proxy`、`reject` 三个 `RULE-SET` 来前置修正规则。
 
+## 补充说明: rule-providers
+
+我们将强制修正的规则通过 `rule-providers` 维护，这样做的好处是可以在 `rules` 和 `dns` 中使用 `rule-set` 引用同一份配置，无需重复编写。在配置内容上使用 `inline` + `classical` 配合的形式，使得我们无需依赖远程仓库（旧做法是使用 GitHub 仓库或者 gist 托管），同时又可以使用 `DOMAIN-SUFFIX`、`DOMAIN-KEYWORD` 等特性，调整成本非常低。
+
 ## 补充说明: default-nameserver、fallback
 
-`default-nameserver`: 用于解析 `nameserver`、`fallback`、`nameserver-policy` 中通过域名指定的 DNS 服务器，我们使用 IP 配置 DoT 和 DoH 节点，因此不再需要此配置
-`fallback`: 虚空终端之前 Clash 使用的策略，逻辑比较复杂，不再推荐，使用更加简单易懂的 `nameserver-policy` 替代
+`default-nameserver`: 用于解析 `nameserver`、`fallback`、`nameserver-policy` 中通过域名指定的 DNS 服务器，我们使用 IP 配置 DoT 和 DoH 节点，因此不再需要此配置。
+`fallback`: 虚空终端之前 Clash 使用的策略，逻辑比较复杂，不再推荐，使用更加简单易懂的 `nameserver-policy` 替代。
 
 ## 补充说明: GEOIP + no-resolve 是错误用法
 
