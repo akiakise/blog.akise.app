@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>AA博客</title>
+  <icon>https://blog.akise.app/img/favicons/favicon.ico</icon>
+  <subtitle>Keep Calm and Carry On | akiakise 的技术博客</subtitle>
+  <link href="https://blog.akise.app/atom.xml" rel="self"/>
+  
+  <link href="https://blog.akise.app/"/>
+  <updated>2025-05-04T10:40:18.160Z</updated>
+  <id>https://blog.akise.app/</id>
+  
+  <author>
+    <name>Aki Akise</name>
+    
+  </author>
+  
+  <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>利用 Cloudflare 重定向规则自动处理非法 URL</title>
+    <link href="https://blog.akise.app/posts/cloudflare-redirect-invalid-url/"/>
+    <id>https://blog.akise.app/posts/cloudflare-redirect-invalid-url/</id>
+    <published>2025-03-01T11:13:18.000Z</published>
+    <updated>2025-05-04T10:40:18.160Z</updated>
+    
+    
+    <summary type="html">网上分享网站链接时偶尔会漏加空格，这时多数平台都会将原始链接+跟着的内容识别为新链接，用户点进来是 404 非常尴尬，我们借助 Cloudflare 的重定向规则来解决此问题</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="Cloudflare" scheme="https://blog.akise.app/tags/Cloudflare/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Clash.Meta DNS 配置指南</title>
+    <link href="https://blog.akise.app/posts/clash-dns-configure/"/>
+    <id>https://blog.akise.app/posts/clash-dns-configure/</id>
+    <published>2025-02-23T03:49:12.000Z</published>
+    <updated>2025-05-04T10:40:18.160Z</updated>
+    
+    
+    <summary type="html">Clash DNS 配置指南，详细描述 Clash 中 DNS 解析流程与推荐配置</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="Clash.Meta" scheme="https://blog.akise.app/tags/Clash-Meta/"/>
+    
+    <category term="Mihomo" scheme="https://blog.akise.app/tags/Mihomo/"/>
+    
+    <category term="DNS" scheme="https://blog.akise.app/tags/DNS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>利用 Cloudflare 重定向规则摆脱端口访问服务</title>
+    <link href="https://blog.akise.app/posts/cloudflare-redirect-rule/"/>
+    <id>https://blog.akise.app/posts/cloudflare-redirect-rule/</id>
+    <published>2025-02-17T02:32:09.000Z</published>
+    <updated>2025-05-04T10:40:18.160Z</updated>
+    
+    
+    <summary type="html">在 80/443 端口无法顺畅提供服务时往往需要暴露其他端口，而服务数量多了之后端口记忆也是一个问题，本文通过借助 Cloudflare 的功能来实现“无端口”访问非 80/443 端口的服务。</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="Cloudflare" scheme="https://blog.akise.app/tags/Cloudflare/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>我在 NAS 上都部署了什么服务</title>
+    <link href="https://blog.akise.app/posts/nas/"/>
+    <id>https://blog.akise.app/posts/nas/</id>
+    <published>2025-02-01T04:59:28.000Z</published>
+    <updated>2025-05-04T10:40:18.160Z</updated>
+    
+    
+    <summary type="html">NAS 用法分享</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="NAS" scheme="https://blog.akise.app/tags/NAS/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>内网穿透详解</title>
+    <link href="https://blog.akise.app/posts/nat-traversal/"/>
+    <id>https://blog.akise.app/posts/nat-traversal/</id>
+    <published>2025-01-19T04:59:28.000Z</published>
+    <updated>2025-05-04T10:40:18.160Z</updated>
+    
+    
+    <summary type="html">详细描述多种内网穿透方案的实现细节，包括基于 Tailscale 的内网穿透、基于 FRP 的内网穿透、基于 DDNS 的公网 IPv4 和 IPv6 穿透。</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="NAS" scheme="https://blog.akise.app/tags/NAS/"/>
+    
+    <category term="DDNS" scheme="https://blog.akise.app/tags/DDNS/"/>
+    
+    <category term="FRP" scheme="https://blog.akise.app/tags/FRP/"/>
+    
+    <category term="Tailscale" scheme="https://blog.akise.app/tags/Tailscale/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Alfred 精确计算器</title>
+    <link href="https://blog.akise.app/posts/alfred-accurate-calculator/"/>
+    <id>https://blog.akise.app/posts/alfred-accurate-calculator/</id>
+    <published>2024-07-14T10:44:59.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">扩展 Alfred 原生计算器能力</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="mac" scheme="https://blog.akise.app/tags/mac/"/>
+    
+    <category term="alfred" scheme="https://blog.akise.app/tags/alfred/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Spring 中的跨域问题</title>
+    <link href="https://blog.akise.app/posts/spring-cross-origin/"/>
+    <id>https://blog.akise.app/posts/spring-cross-origin/</id>
+    <published>2018-11-10T03:56:08.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;项目做前后端分离，遇到了一个很常见的问题：跨域。想着每次遇到都要搜索解决，而且搜到的文章给出的解决方案又千奇百怪，不一定合适，于是萌生了总结一下的想法。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Java" scheme="https://blog.akise.app/categories/Java/"/>
+    
+    
+    <category term="java" scheme="https://blog.akise.app/tags/java/"/>
+    
+    <category term="spring" scheme="https://blog.akise.app/tags/spring/"/>
+    
+    <category term="cross region" scheme="https://blog.akise.app/tags/cross-region/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Maven 中的 Scope</title>
+    <link href="https://blog.akise.app/posts/maven-scope/"/>
+    <id>https://blog.akise.app/posts/maven-scope/</id>
+    <published>2018-10-27T06:33:31.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;Maven 中 scope 的取值一共有 &lt;code&gt;compile&lt;/code&gt;、&lt;code&gt;test&lt;/code&gt;、&lt;code&gt;runtime&lt;/code&gt;、&lt;code&gt;provided&lt;/code&gt;、&lt;code&gt;system&lt;/code&gt; 这几种，其实没有必要专门写一篇博客来讲。但是最近遇到了一个相关的坑，其实也不能说是坑，主要原因是自己对这些东西一知半解，所以还是有必要深究一下。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="java" scheme="https://blog.akise.app/tags/java/"/>
+    
+    <category term="maven" scheme="https://blog.akise.app/tags/maven/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>聊聊延时任务队列</title>
+    <link href="https://blog.akise.app/posts/delayed-task-queue/"/>
+    <id>https://blog.akise.app/posts/delayed-task-queue/</id>
+    <published>2018-10-08T06:38:01.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;延时队列，顾名思义，是为了让一些任务不立即执行，放到队列里面等到特定时间后再执行。常用的场景有：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;订单一直处于未支付状态，需要及时关闭订单，并退还库存&lt;/li&gt;
+&lt;li&gt;用户通过遥控设备控制智能设备在指定时间进行工作&lt;/li&gt;
+&lt;li&gt;eFuture 中未来邮件需要在用户指定的时间点发送&lt;/li&gt;
+&lt;/ul&gt;</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="queue" scheme="https://blog.akise.app/tags/queue/"/>
+    
+    <category term="redis" scheme="https://blog.akise.app/tags/redis/"/>
+    
+    <category term="rabbitmq" scheme="https://blog.akise.app/tags/rabbitmq/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat</title>
+    <link href="https://blog.akise.app/posts/travis-tomcat/"/>
+    <id>https://blog.akise.app/posts/travis-tomcat/</id>
+    <published>2018-05-27T06:52:15.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;&lt;img src=&quot;/img/tech/travis.png&quot; alt=&quot;Travis CI&quot; title=&quot;Travis CI&quot;&gt;&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Technology" scheme="https://blog.akise.app/categories/Technology/"/>
+    
+    
+    <category term="java" scheme="https://blog.akise.app/tags/java/"/>
+    
+    <category term="ci" scheme="https://blog.akise.app/tags/ci/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>编译原理之 Chomsky 文法的判断 —— Java 实现</title>
+    <link href="https://blog.akise.app/posts/compiling-principle-chomsky/"/>
+    <id>https://blog.akise.app/posts/compiling-principle-chomsky/</id>
+    <published>2018-04-10T08:58:38.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;文法的定义和记号&lt;/p&gt;
+&lt;p&gt;$$ G &amp;#x3D; (V_N, V_T, P, S) &#92;qquad (V_N &#92;cap V_T &amp;#x3D; &#92;varnothing, V_N &#92;cup V_T &amp;#x3D; V) $$&lt;/p&gt;
+&lt;p&gt;是 N.Chomsky 在 1956 年描述形式语言时首先给出的。同时，Chomsky 还对产生式的形式给以不同的限制而定义了四类基本的文法，分别称之为 0 型文法，1 型文法，2 型文法和 3 型文法。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Learn" scheme="https://blog.akise.app/categories/Learn/"/>
+    
+    
+    <category term="learn" scheme="https://blog.akise.app/tags/learn/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Spring Boot 项目打包并部署到 Tomcat、Tomcat 同时部署多应用</title>
+    <link href="https://blog.akise.app/posts/spring-boot-project-package-and-deploy/"/>
+    <id>https://blog.akise.app/posts/spring-boot-project-package-and-deploy/</id>
+    <published>2018-01-21T13:02:42.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;Spring Boot 项目开发完毕后，需要部署到 tomcat 服务器下，鉴于经常忘记部署流程，特地写了一篇博客来记录。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Java" scheme="https://blog.akise.app/categories/Java/"/>
+    
+    
+    <category term="deployment" scheme="https://blog.akise.app/tags/deployment/"/>
+    
+    <category term="java" scheme="https://blog.akise.app/tags/java/"/>
+    
+    <category term="spring boot" scheme="https://blog.akise.app/tags/spring-boot/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Spring Boot 集成 Shiro 权限管理与密码加盐加密存储</title>
+    <link href="https://blog.akise.app/posts/spring-boot-shiro/"/>
+    <id>https://blog.akise.app/posts/spring-boot-shiro/</id>
+    <published>2018-01-14T11:56:15.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;在 Spring 中，流行的涉及权限管理的框架有两个：Spring Security 和 Apache Shiro。但是去了解一下 Spring Security 就知道，简单的权限管理根本用不到那么复杂的功能。在自己的项目中，我更倾向于使用简单明了的 Apache Shiro。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Java" scheme="https://blog.akise.app/categories/Java/"/>
+    
+    
+    <category term="java" scheme="https://blog.akise.app/tags/java/"/>
+    
+    <category term="spring boot" scheme="https://blog.akise.app/tags/spring-boot/"/>
+    
+    <category term="shiro" scheme="https://blog.akise.app/tags/shiro/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>SpringBoot WebSocket 发送广播，Android 接收</title>
+    <link href="https://blog.akise.app/posts/spring-boot-websocket-android-client/"/>
+    <id>https://blog.akise.app/posts/spring-boot-websocket-android-client/</id>
+    <published>2017-12-14T02:16:11.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;h2 id=&quot;WebSocket&quot;&gt;&lt;a href=&quot;#WebSocket&quot; class=&quot;headerlink&quot; title=&quot;WebSocket&quot;&gt;&lt;/a&gt;WebSocket&lt;/h2&gt;&lt;p&gt;WebSocket 为客户端、浏览器和服务端提供了双工异步通信的功能，即客户端（浏览器、Android）可以向服务器发送消息，服务器端也可以向客户端发送消息。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Java" scheme="https://blog.akise.app/categories/Java/"/>
+    
+    
+    <category term="java" scheme="https://blog.akise.app/tags/java/"/>
+    
+    <category term="spring boot" scheme="https://blog.akise.app/tags/spring-boot/"/>
+    
+    <category term="websocket" scheme="https://blog.akise.app/tags/websocket/"/>
+    
+    <category term="android" scheme="https://blog.akise.app/tags/android/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Nginx 提供文件下载服务</title>
+    <link href="https://blog.akise.app/posts/nginx-provide-download/"/>
+    <id>https://blog.akise.app/posts/nginx-provide-download/</id>
+    <published>2017-11-30T09:21:54.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;有时候我们可能需要提供一些配置文件或安装包的下载链接，这种场景使用 CDN 有些杀鸡用牛刀，通过 Eginx 配置可以简单快速的提供功能。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Nginx" scheme="https://blog.akise.app/categories/Nginx/"/>
+    
+    
+    <category term="nginx" scheme="https://blog.akise.app/tags/nginx/"/>
+    
+    <category term="linux" scheme="https://blog.akise.app/tags/linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Nginx 自定义静态资源位置</title>
+    <link href="https://blog.akise.app/posts/nginx-static-resources/"/>
+    <id>https://blog.akise.app/posts/nginx-static-resources/</id>
+    <published>2017-10-27T12:43:18.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;blockquote&gt;
+&lt;p&gt;nginx [Engine X] is an HTTP and reverse proxy server, a mail proxy server, and a generic TCP&amp;#x2F;UDP proxy server, originally written by &lt;a href=&quot;http://sysoev.ru/en/&quot;&gt;Igor Sysoev&lt;/a&gt;.&lt;/p&gt;
+&lt;/blockquote&gt;</summary>
+    
+    
+    
+    <category term="Nginx" scheme="https://blog.akise.app/categories/Nginx/"/>
+    
+    
+    <category term="nginx" scheme="https://blog.akise.app/tags/nginx/"/>
+    
+    <category term="linux" scheme="https://blog.akise.app/tags/linux/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Centos7 系统使用 Gunicorn、Supervisor、Nginx 部署使用了工厂模式的 Flask 项目</title>
+    <link href="https://blog.akise.app/posts/python-flask-deploy/"/>
+    <id>https://blog.akise.app/posts/python-flask-deploy/</id>
+    <published>2017-10-01T06:21:30.000Z</published>
+    <updated>2025-05-04T10:40:18.159Z</updated>
+    
+    
+    <summary type="html">&lt;p&gt;项目后端从原始 socket 模式切换到了 RESTful API，考虑到项目的复杂度不高，于是我决定采用 Flask 来实现，本文记录一下基于 Gunicorn、Supervisor 和 Nginx 的最终的部署过程。&lt;/p&gt;</summary>
+    
+    
+    
+    <category term="Python" scheme="https://blog.akise.app/categories/Python/"/>
+    
+    
+    <category term="python" scheme="https://blog.akise.app/tags/python/"/>
+    
+    <category term="flask" scheme="https://blog.akise.app/tags/flask/"/>
+    
+    <category term="deployment" scheme="https://blog.akise.app/tags/deployment/"/>
+    
+  </entry>
+  
+</feed>

@@ -1,0 +1,671 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Clash.Meta DNS 配置指南 - AA博客</title>
+
+  
+    <meta name="description" content="Clash DNS 配置指南，详细描述 Clash 中 DNS 解析流程与推荐配置">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clash.Meta DNS 配置指南">
+<meta property="og:url" content="https://blog.akise.app/posts/clash-dns-configure/">
+<meta property="og:site_name" content="AA博客">
+<meta property="og:description" content="Clash DNS 配置指南，详细描述 Clash 中 DNS 解析流程与推荐配置">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://blog.akise.app/img/2025/clash-dns-configure/cover.png">
+<meta property="article:published_time" content="2025-02-23T03:49:12.000Z">
+<meta property="article:modified_time" content="2025-05-04T10:40:18.160Z">
+<meta property="article:author" content="Aki Akise">
+<meta property="article:tag" content="Clash.Meta">
+<meta property="article:tag" content="Mihomo">
+<meta property="article:tag" content="DNS">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://blog.akise.app/img/2025/clash-dns-configure/cover.png">
+  
+  
+  
+  <meta name="keywords" content="Clash.Meta,Mihomo,DNS">
+
+  <!-- feed -->
+  
+    <link rel="alternate" href="/atom.xml" title="AA博客" type="application/atom+xml">
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+    <link rel="shortcut icon" href="/img/favicons/favicon.ico">
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="/img/website/avatar.jpg" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/"><div class="main" ff="title">AA博客</div><div class="sub normal cap">Keep Calm and Carry On</div><div class="sub hover cap" style="opacity:0"> akiakise 的技术博客</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="社交" href="/friends/" style="color:#F44336"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"/><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"/></svg></a></nav>
+</div>
+<div class="widgets">
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">专栏：Playground</span></div><div class="widget-body"><a class="item" href="/posts/cloudflare-redirect-invalid-url/"><span class="title">利用 Cloudflare 重定向规则自动处理非法 URL</span></a><a class="item active" href="/posts/clash-dns-configure/"><span class="title">Clash.Meta DNS 配置指南</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item" href="/posts/cloudflare-redirect-rule/"><span class="title">利用 Cloudflare 重定向规则摆脱端口访问服务</span></a></div></widget>
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/posts/nat-traversal/"><span class="title">内网穿透详解</span></a><a class="item title" href="/posts/nas/"><span class="title">我在 NAS 上都部署了什么服务</span></a><a class="item title" href="/posts/cloudflare-redirect-rule/"><span class="title">利用 Cloudflare 重定向规则摆脱端口访问服务</span></a><a class="item title" href="/posts/clash-dns-configure/"><span class="title">Clash.Meta DNS 配置指南</span></a><a class="item title" href="/posts/cloudflare-redirect-invalid-url/"><span class="title">利用 Cloudflare 重定向规则自动处理非法 URL</span></a><a class="item title" href="/posts/python-flask-deploy/"><span class="title">Centos7 系统使用 Gunicorn、Supervisor、Nginx 部署使用了工厂模式的 Flask 项目</span></a><a class="item title" href="/posts/nginx-static-resources/"><span class="title">Nginx 自定义静态资源位置</span></a><a class="item title" href="/posts/nginx-provide-download/"><span class="title">Nginx 提供文件下载服务</span></a><a class="item title" href="/posts/spring-boot-websocket-android-client/"><span class="title">SpringBoot WebSocket 发送广播，Android 接收</span></a><a class="item title" href="/posts/spring-boot-shiro/"><span class="title">Spring Boot 集成 Shiro 权限管理与密码加盐加密存储</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="https://github.com/akiakise" target="_blank" rel="external nofollow noopener noreferrer"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg"/></a><a class="social" onclick="switchTheme()"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><path fill="currentColor" fill-rule="evenodd" d="M582.4 326.4c-140.8 0-256 115.2-256 256s115.2 256 256 256 256-115.2 256-256-115.2-256-256-256z m0 448c-70.4 0-131.2-36.8-164.8-92.8 12.8 3.2 27.2 4.8 40 4.8 121.6 0 219.2-99.2 219.2-219.2 0-17.6-1.6-35.2-6.4-52.8 60.8 32 102.4 96 102.4 169.6 1.6 104-84.8 190.4-190.4 190.4zM582.4 262.4c17.6 0 32-14.4 32-32v-128c0-17.6-14.4-32-32-32s-32 14.4-32 32v128c0 17.6 14.4 32 32 32zM262.4 582.4c0-17.6-14.4-32-32-32h-128c-17.6 0-32 14.4-32 32s14.4 32 32 32h128c17.6 0 32-14.4 32-32zM310.4 356.8c6.4 6.4 14.4 9.6 22.4 9.6 8 0 16-3.2 22.4-9.6 12.8-12.8 12.8-32 0-44.8l-91.2-91.2c-12.8-12.8-32-12.8-44.8 0-12.8 12.8-12.8 32 0 44.8l91.2 91.2zM944 220.8c-12.8-12.8-32-12.8-44.8 0l-91.2 91.2c-12.8 12.8-12.8 32 0 44.8 6.4 6.4 14.4 9.6 22.4 9.6 8 0 16-3.2 22.4-9.6l91.2-91.2c12.8-12.8 12.8-33.6 0-44.8zM310.4 808l-91.2 91.2c-12.8 12.8-12.8 32 0 44.8 6.4 6.4 14.4 9.6 22.4 9.6 8 0 16-3.2 22.4-9.6l91.2-91.2c12.8-12.8 12.8-32 0-44.8-11.2-11.2-32-11.2-44.8 0z"></path></svg></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top"><img class="bg lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/clash-dns-configure/cover.png">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/cloudflare-redirect-invalid-url/">Playground</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-02-23T03:49:12.000Z">2025-02-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2025-05-04T10:40:18.160Z">2025-05-04</time></span></div></div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Clash.Meta DNS 配置指南</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>随着互联网技术的发展与广告联盟的互联互通，大家对隐私的重视程度也越来越高，而 DNS 作为网络基础设施，其<mark class="tag-plugin colorful mark" color="error">泄露</mark>的风险与泄露后导致的问题影响也越来越大。泄露可能涉及的问题主要有：用户通过虚拟专用网络或网络代理请求的域名被记录或审查、用户浏览历史被记录和分析用于广告投放或数据挖掘。同时 ISP 的 DNS 也天生自带污染和和劫持，并不推荐使用。</p>
+<div class="tag-plugin quot"><p class="content" type="text"><span class="empty"></span><span class="text">A DNS leak is a security flaw that allows DNS requests to be revealed to ISP DNS servers, despite the use of a VPN service to attempt to conceal them. Although primarily of concern to VPN users, it is also possible to prevent it for proxy and direct internet users.</span><span class="empty"></span></p></div>
+
+<p><a target="_blank" rel="noopener" href="https://wiki.metacubex.one/">虚空终端</a>作为开源项目<a target="_blank" rel="noopener" href="https://yuanshen.com/">原神</a>的二次开发版本，提供了更强的 DNS 处理能力，通过简单且合理的配置，可以尽最大可能规避 DNS 污染、劫持、泄露问题（不能做 100% 保证，毕竟不清楚还有没有未知的手段）。</p>
+<h1 id="DNS-解析流程"><a href="#DNS-解析流程" class="headerlink" title="DNS 解析流程"></a>DNS 解析流程</h1><p>下图来自虚空终端 wiki: <a target="_blank" rel="noopener" href="https://wiki.metacubex.one/config/dns/diagram/">DNS 解析流程</a></p>
+<div class="tag-plugin image"><div class="image-bg"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/clash-dns-configure/cover.png" alt="DNS Resolve" data-fancybox="true"/></div><div class="image-meta"><span class="image-caption center">DNS Resolve</span></div></div>
+
+<h1 id="配置指南"><a href="#配置指南" class="headerlink" title="配置指南"></a>配置指南</h1><p>我们直接给出推荐配置，并结合上边的解析流程来详细分析：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">geodata-mode:</span> <span class="literal">true</span> </span><br><span class="line"><span class="attr">geodata-loader:</span> <span class="string">memconservative</span></span><br><span class="line"><span class="attr">geo-auto-update:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">geo-update-interval:</span> <span class="number">24</span></span><br><span class="line"><span class="attr">geox-url:</span></span><br><span class="line">  <span class="attr">geoip:</span> <span class="string">&quot;https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat&quot;</span></span><br><span class="line">  <span class="attr">geosite:</span> <span class="string">&quot;https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat&quot;</span></span><br><span class="line">  <span class="attr">mmdb:</span> <span class="string">&quot;https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb&quot;</span></span><br><span class="line">  <span class="attr">asn:</span> <span class="string">&quot;https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb&quot;</span></span><br><span class="line"><span class="attr">dns:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">prefer-h3:</span> <span class="literal">false</span> <span class="comment"># DOH 优先使用 http/3</span></span><br><span class="line">  <span class="attr">use-hosts:</span> <span class="literal">true</span> <span class="comment"># 是否回应配置中的 hosts，默认 true</span></span><br><span class="line">  <span class="attr">use-system-hosts:</span> <span class="literal">false</span> <span class="comment"># 是否查询系统 hosts，默认 true，我们不用系统 hosts</span></span><br><span class="line">  <span class="attr">listen:</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span><span class="string">:53</span> <span class="comment"># DNS 服务监听，仅支持 udp</span></span><br><span class="line">  <span class="attr">ipv6:</span> <span class="literal">true</span> <span class="comment"># ipv6 解析开关</span></span><br><span class="line">  <span class="attr">default-nameserver:</span> <span class="comment"># 默认 DNS, 用于解析 DNS 服务器 的域名，必须为 IP, 可为加密 DNS</span></span><br><span class="line">    <span class="bullet">-</span> <span class="number">1.2</span><span class="number">.4</span><span class="number">.8</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">tls://223.5.5.5</span></span><br><span class="line">  <span class="attr">enhanced-mode:</span> <span class="string">fake-ip</span> <span class="comment"># or reder-host</span></span><br><span class="line">  <span class="attr">fake-ip-range:</span> <span class="number">172.29</span><span class="number">.0</span><span class="number">.1</span><span class="string">/16</span> <span class="comment"># Fake-IP 解析地址池</span></span><br><span class="line">  <span class="attr">fake-ip-filter:</span> <span class="comment"># Fake-IP 过滤，列表中的域名返回真实 IP</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;+.lan&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;+.in-addr.arpa&#x27;</span></span><br><span class="line">  <span class="comment"># 配置后面的nameserver、fallback和nameserver-policy向dns服务器的连接过程是否遵守遵守rules规则</span></span><br><span class="line">  <span class="comment"># 如果为false（默认值）则这三部分的dns服务器在未特别指定的情况下会直连</span></span><br><span class="line">  <span class="comment"># 如果为true，将会按照rules的规则匹配链接方式（走代理或直连），如果有特别指定则任然以指定值为准</span></span><br><span class="line">  <span class="comment"># 仅当proxy-server-nameserver非空时可以开启此选项, 强烈不建议和prefer-h3一起使用</span></span><br><span class="line">  <span class="comment"># 此外，这三者配置中的dns服务器如果出现域名会采用default-nameserver配置项解析，也请确保正确配置default-nameserver</span></span><br><span class="line">  <span class="attr">respect-rules:</span> <span class="literal">false</span></span><br><span class="line">  <span class="comment"># 配置查询域名使用的 DNS 服务器</span></span><br><span class="line">  <span class="attr">nameserver-policy:</span></span><br><span class="line">    <span class="string">&quot;+.lan,+.in-addr.arpa&quot;</span><span class="string">:</span> <span class="string">system</span></span><br><span class="line">    <span class="comment"># 广告拦截，效果有限，请使用浏览器扩展等更有效的手段</span></span><br><span class="line">    <span class="attr">&quot;geosite:category-ads-all&quot;:</span> <span class="string">rcode://success</span></span><br><span class="line">    <span class="comment"># 禁止 apple 更新检测</span></span><br><span class="line">    <span class="attr">&quot;geosite:apple-update&quot;:</span> <span class="string">rcode://success</span></span><br><span class="line">    <span class="attr">&quot;rule-set:direct&quot;:</span></span><br><span class="line">      <span class="comment"># 阿里 DNS</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.5.5.5</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.6.6.6</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;https://223.5.5.5/dns-query#h3=true&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;https://223.6.6.6/dns-query#h3=true&#x27;</span></span><br><span class="line">    <span class="string">&quot;geosite:private,onedrive,microsoft@cn,apple@cn,steam@cn,google@cn,jetbrains@cn,category-games@cn,cn&quot;</span><span class="string">:</span></span><br><span class="line">      <span class="comment"># 阿里 DNS</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.5.5.5</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.6.6.6</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;https://223.5.5.5/dns-query#h3=true&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;https://223.6.6.6/dns-query#h3=true&#x27;</span></span><br><span class="line">  <span class="attr">proxy-server-nameserver:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://223.5.5.5/dns-query#h3=true&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://223.6.6.6/dns-query#h3=true&#x27;</span></span><br><span class="line">  <span class="attr">nameserver:</span></span><br><span class="line">    <span class="comment"># Cloudflare</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://1.1.1.1#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://1.0.0.1#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://1.1.1.1/dns-query#PROXY&amp;h3=true&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://1.0.0.1/dns-query#PROXY&amp;h3=true&#x27;</span></span><br><span class="line">    <span class="comment"># Google</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://8.8.8.8#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://8.8.4.4#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://8.8.8.8/dns-query#PROXY&amp;h3=true&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://8.8.4.4/dns-query#PROXY&amp;h3=true&#x27;</span></span><br><span class="line">    <span class="comment"># 101</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://101.101.101.101#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://101.101.101.101/dns-query#PROXY&#x27;</span></span><br><span class="line">    <span class="comment"># dns.sb</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://185.222.222.222#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;tls://45.11.45.11#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://185.222.222.222/dns-query#PROXY&#x27;</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&#x27;https://45.11.45.11/dns-query#PROXY&#x27;</span></span><br><span class="line"><span class="attr">rule-providers:</span></span><br><span class="line">  <span class="attr">direct:</span></span><br><span class="line">    <span class="attr">behavior:</span> <span class="string">classical</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">inline</span></span><br><span class="line">    <span class="attr">payload:</span></span><br><span class="line">      <span class="comment"># CDN</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,download-cdn.jetbrains.com&#x27;</span></span><br><span class="line">      <span class="comment"># Clash Dashboard &amp; Converter</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,clash.razord.top&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,yacd.haishan.me&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,nexconvert.com&#x27;</span></span><br><span class="line">      <span class="comment"># DDNS</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN-SUFFIX,ip.sb&#x27;</span></span><br><span class="line">      <span class="comment"># time</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,time.android.com&#x27;</span></span><br><span class="line">  <span class="attr">proxy:</span></span><br><span class="line">    <span class="attr">behavior:</span> <span class="string">classical</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">inline</span></span><br><span class="line">    <span class="attr">payload:</span></span><br><span class="line">      <span class="comment"># 这些域名虽然在国内有接入点，但是直连体验并不好，因此强制代理</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,dockerstatic.com&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,fonts.googleapis.com&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,fonts.gstatic.com&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN,www.gstatic.com&#x27;</span></span><br><span class="line">  <span class="attr">reject:</span></span><br><span class="line">    <span class="attr">behavior:</span> <span class="string">classical</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">inline</span></span><br><span class="line">    <span class="attr">payload:</span></span><br><span class="line">      <span class="comment"># niconico 广告</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN-SUFFIX,ads.nicovideo.jp&#x27;</span></span><br><span class="line">      <span class="comment"># mumu 模拟器广告</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN-SUFFIX,mumu.nie.netease.com&#x27;</span></span><br><span class="line">      <span class="comment"># postman 更新</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN-SUFFIX,dl.pstmn.io&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN-SUFFIX,sync-v3.getpostman.com&#x27;</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">&#x27;DOMAIN-SUFFIX,getpostman.com&#x27;</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="comment"># 个人规则，1.2.3.4 用作示例</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">IP-CIDR,1.2.3.4/32,PROXY,no-resolve</span></span><br><span class="line">  <span class="comment"># 规则修正</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">RULE-SET,reject,REJECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">RULE-SET,proxy,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">RULE-SET,direct,DIRECT</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># 广告过滤</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,category-ads-all,REJECT</span></span><br><span class="line">  <span class="comment"># 强制直连</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,private,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,onedrive,DIRECT</span></span><br><span class="line">  <span class="comment"># @cn 为该规则内的域名在中国大陆有接入点，可直连</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,microsoft@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,apple@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,steam@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,google@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,jetbrains@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,category-games@cn,DIRECT</span></span><br><span class="line">  <span class="comment"># 流媒体</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,biliintl,国际流媒体</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,youtube,国际流媒体</span></span><br><span class="line">  <span class="comment"># 强制代理</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,google,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,twitter,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,pixiv,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,category-scholar-!cn,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,geolocation-!cn,PROXY</span></span><br><span class="line">  <span class="comment"># 兜底强制直连</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,cn,DIRECT</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># GEOIP 规则</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,private,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,telegram,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,JP,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,CN,DIRECT</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># 兜底代理</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">MATCH,PROXY</span></span><br></pre></td></tr></table></figure>
+
+<p>在这个配置中，最最核心的就是利用 <code>GEOSITE</code> 来进行域名规则的判断，以下我们分为几种情况来分析其解析流程。</p>
+<h2 id="1-直接通过-ip-访问"><a href="#1-直接通过-ip-访问" class="headerlink" title="1. 直接通过 ip 访问"></a>1. 直接通过 ip 访问</h2><p>直接通过 <code>1.2.3.4</code> 访问会命中 <code>IP-CIDR,1.2.3.4/32,PROXY,no-resolve</code> 规则，它会跳过 DNS 解析流程并直接交给对应的策略处理（这里配置为 PROXY 策略）。</p>
+<p>假设我们同时有一个域名 <code>example.com</code> 也指向了 <code>1.2.3.4</code>，那我们访问域名的时候并不会走到这条规则，因为规则添加了 <code>no-resolve</code> 条件，除非是直接通过 IP 访问，否则直接跳过此规则。</p>
+<h2 id="2-访问境内域名，命中-GEOSITE-规则"><a href="#2-访问境内域名，命中-GEOSITE-规则" class="headerlink" title="2. 访问境内域名，命中 GEOSITE 规则"></a>2. 访问境内域名，命中 GEOSITE 规则</h2><p>当访问的境内域名命中 <code>GEOSITE</code> 规则时，由于指定了 <code>DIRECT</code> 策略，虚空终端会进入 DNS 解析流程，结合配置文件来说流程如下：</p>
+<ol>
+<li>查询 DNS 缓存，如果查到，拿出对应的 IP 并直接建立连接</li>
+<li>匹配 <code>nameserver-policy</code>，我们将所有的境内规则的 <code>GEOSITE</code> 也都配置在了这里，因此肯定会命中这条规则。在 <code>nameserver-policy</code> 内容里我们配置了 AliDNS 的 DoT 和 DoH，虚空终端会并发查询这些 nameserver 并返回最快返回的结果</li>
+<li>拿到域名解析结果，直接建立连接，并保存 DNS 缓存</li>
+</ol>
+<h2 id="3-访问境外域名，命中-GEOSITE-规则"><a href="#3-访问境外域名，命中-GEOSITE-规则" class="headerlink" title="3. 访问境外域名，命中 GEOSITE 规则"></a>3. 访问境外域名，命中 GEOSITE 规则</h2><p>当访问的境外域名命中 <code>GEOSITE</code> 规则时，由于指定了 <code>PROXY</code> 策略，因此虚空终端会直接将域名解析与请求处理路由到 <code>PROXY</code> 节点，跳过自身所有的 DNS 解析流程。</p>
+<h2 id="4-访问任意域名，未命中境内或境外-GEOSITE-规则"><a href="#4-访问任意域名，未命中境内或境外-GEOSITE-规则" class="headerlink" title="4. 访问任意域名，未命中境内或境外 GEOSITE 规则"></a>4. 访问任意域名，未命中境内或境外 GEOSITE 规则</h2><p>境内境外 <code>GEOSITE</code> 规则未命中时，规则解析一路往下走到 <code>GEOIP</code> 规则，<code>GEOIP</code> 规则判断前需要先拿到域名对应的 IP，因此虚空终端会发起一次 DNS 解析流程：</p>
+<ol>
+<li>查询 DNS 缓存，如果查到，拿出对应的 IP 交给 <code>GEOIP</code> 规则判断</li>
+<li>匹配 <code>nameserver-policy</code>，我们在这里配置的 <code>GEOSITE</code> 规则跟 <code>rules</code> 里用的 <code>GEOSITE</code> 规则是一致的，因此也无法命中</li>
+<li>兜底使用 <code>nameserver</code>，在内容里我们配置了常用的境外 DoT 和 DoH，并且指定这些 DNS 查询时使用 <code>PROXY</code> 节点以加速（境外 DNS 境内直接访问延迟很高），同时配置了 <code>proxy-server-nameserver</code> 来避免鸡蛋问题（考虑到解析速度配置成了 AliDNS，无奈之举），另外节点如果支持 H3 则尽可能使用 H3（这点存疑，境内到境外 H3 稳定性不确定）</li>
+<li>拿到域名解析结果，交给 <code>GEOIP</code> 规则判断，并保存 DNS 缓存</li>
+<li>如果 <code>GEOIP</code> 规则判断直连，则直接建立连接，如果 <code>GEOIP</code> 规则未命中，则走到兜底使用代理建立连接</li>
+</ol>
+<p>可以看到，我们兜底使用远程节点来解析未命中规则的域名，我个人倾向于假设未命中规则的都是境外域名，因此都由境外 DNS 解析来避免国内 DNS 保留记录。当然这里也可以改为使用境内 DNS 解析，两种策略任君自选。</p>
+<h2 id="5-规则修正"><a href="#5-规则修正" class="headerlink" title="5. 规则修正"></a>5. 规则修正</h2><p>规则库不是万能的，因此必然会出现某些域名分流错误的情况，我们通过补充的 <code>direct</code>、<code>proxy</code>、<code>reject</code> 三个 <code>RULE-SET</code> 来前置修正规则。</p>
+<h2 id="补充说明-rule-providers"><a href="#补充说明-rule-providers" class="headerlink" title="补充说明: rule-providers"></a>补充说明: rule-providers</h2><p>我们将强制修正的规则通过 <code>rule-providers</code> 维护，这样做的好处是可以在 <code>rules</code> 和 <code>dns</code> 中使用 <code>rule-set</code> 引用同一份配置，无需重复编写。在配置内容上使用 <code>inline</code> + <code>classical</code> 配合的形式，使得我们无需依赖远程仓库（旧做法是使用 GitHub 仓库或者 gist 托管），同时又可以使用 <code>DOMAIN-SUFFIX</code>、<code>DOMAIN-KEYWORD</code> 等特性，调整成本非常低。</p>
+<h2 id="补充说明-default-nameserver、fallback"><a href="#补充说明-default-nameserver、fallback" class="headerlink" title="补充说明: default-nameserver、fallback"></a>补充说明: default-nameserver、fallback</h2><p><code>default-nameserver</code>: 用于解析 <code>nameserver</code>、<code>fallback</code>、<code>nameserver-policy</code> 中通过域名指定的 DNS 服务器，我们使用 IP 配置 DoT 和 DoH 节点，因此不再需要此配置。<br><code>fallback</code>: 虚空终端之前 Clash 使用的策略，逻辑比较复杂，不再推荐，使用更加简单易懂的 <code>nameserver-policy</code> 替代。</p>
+<h2 id="补充说明-GEOIP-no-resolve-是错误用法"><a href="#补充说明-GEOIP-no-resolve-是错误用法" class="headerlink" title="补充说明: GEOIP + no-resolve 是错误用法"></a>补充说明: GEOIP + no-resolve 是错误用法</h2><p>网上存在很多在 <code>GEOIP,CN,DIRECT</code> 后加上 <code>no-resolve</code> 的，这实际上是一个<mark class="tag-plugin colorful mark" color="error">错误</mark>的用法，<code>GEOIP</code> 类规则就是要解析出 IP 后再进行 IP 判定的，加了 <code>no-resolve</code> 后如果不是直接通过 IP 访问的话，这条规则就失效了。</p>
+<p>同时，虚空终端的规则处理流程是从上往下严格有序的，如果遇到了 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等）会尝试进行 DNS 解析拿到 IP 再判断这条规则，如果某个 IP 类规则不带 <code>no-resolve</code> 并且放的比较靠前，那么必然会产生多余的 DNS 解析。</p>
+<p>因此，这里的正确用法是<mark class="tag-plugin colorful mark" color="green">将所有的 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等）统一放到域名规则之后</mark>，如配置中将所有的 <code>GEOIP</code> 规则都放到了最后边，同时针对需要直接指定 IP 访问的（配置示例中为 <code>1.2.3.4</code>）规则添加 <code>no-resolve</code> 来避免多余的 DNS 解析。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过上述的配置与解析，相信你已经对虚空终端的处理流程了如指掌，如果配置过程中遇到什么问题或者与文章不符的情况欢迎评论。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/posts/cloudflare-redirect-invalid-url/">利用 Cloudflare 重定向规则自动处理非法 URL</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/posts/cloudflare-redirect-rule/">利用 Cloudflare 重定向规则摆脱端口访问服务</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text" id="comments">
+    <section class='header cmt-title cap theme'>
+      <p>Take it easy to comment or discuss &#x2F; 欢迎评论或讨论</p>
+
+    </section>
+    <section class='body cmt-body giscus'>
+      
+
+<svg class="loading" style="vertical-align:middle;fill:currentColor;overflow:hidden;" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2709"><path d="M832 512c0-176-144-320-320-320V128c211.2 0 384 172.8 384 384h-64zM192 512c0 176 144 320 320 320v64C300.8 896 128 723.2 128 512h64z" p-id="2710"></path></svg>
+
+<div id="giscus" src="https://giscus.app/client.js" data-repo="akiakise/blog.akise.app" data-repo-id="R_kgDOLkT3kg" data-category="Announcements" data-category-id="DIC_kwDOLkT3ks4CeK_U" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" crossorigin="anonymous"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p><span id="blog_history"></span></p>
+<script>
+  document.getElementById("blog_history").innerHTML = `© 2017 - ${new Date().getFullYear()}  ♥  <a href="https://github.com/xaoxuu/hexo-theme-stellar" target="_blank">Stellar</a>`;
+</script>
+<p>
+本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。
+</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#DNS-%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B"><span class="toc-text">DNS 解析流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97"><span class="toc-text">配置指南</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%9B%B4%E6%8E%A5%E9%80%9A%E8%BF%87-ip-%E8%AE%BF%E9%97%AE"><span class="toc-text">1. 直接通过 ip 访问</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-%E8%AE%BF%E9%97%AE%E5%A2%83%E5%86%85%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%91%BD%E4%B8%AD-GEOSITE-%E8%A7%84%E5%88%99"><span class="toc-text">2. 访问境内域名，命中 GEOSITE 规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-%E8%AE%BF%E9%97%AE%E5%A2%83%E5%A4%96%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%91%BD%E4%B8%AD-GEOSITE-%E8%A7%84%E5%88%99"><span class="toc-text">3. 访问境外域名，命中 GEOSITE 规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-%E8%AE%BF%E9%97%AE%E4%BB%BB%E6%84%8F%E5%9F%9F%E5%90%8D%EF%BC%8C%E6%9C%AA%E5%91%BD%E4%B8%AD%E5%A2%83%E5%86%85%E6%88%96%E5%A2%83%E5%A4%96-GEOSITE-%E8%A7%84%E5%88%99"><span class="toc-text">4. 访问任意域名，未命中境内或境外 GEOSITE 规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-%E8%A7%84%E5%88%99%E4%BF%AE%E6%AD%A3"><span class="toc-text">5. 规则修正</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E-rule-providers"><span class="toc-text">补充说明: rule-providers</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E-default-nameserver%E3%80%81fallback"><span class="toc-text">补充说明: default-nameserver、fallback</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E-GEOIP-no-resolve-%E6%98%AF%E9%94%99%E8%AF%AF%E7%94%A8%E6%B3%95"><span class="toc-text">补充说明: GEOIP + no-resolve 是错误用法</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div><div class="widget-footer">
+<a class="edit" target="_blank" rel="noopener" href="https://github.com/akiakise/blog.akise.app/edit/main/source/_posts/2025-02-23-clash-dns-configure.md"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M11.943 1.25H13.5a.75.75 0 0 1 0 1.5H12c-2.378 0-4.086.002-5.386.176c-1.279.172-2.05.5-2.62 1.069c-.569.57-.896 1.34-1.068 2.619c-.174 1.3-.176 3.008-.176 5.386s.002 4.086.176 5.386c.172 1.279.5 2.05 1.069 2.62c.57.569 1.34.896 2.619 1.068c1.3.174 3.008.176 5.386.176s4.086-.002 5.386-.176c1.279-.172 2.05-.5 2.62-1.069c.569-.57.896-1.34 1.068-2.619c.174-1.3.176-3.008.176-5.386v-1.5a.75.75 0 0 1 1.5 0v1.557c0 2.309 0 4.118-.19 5.53c-.194 1.444-.6 2.584-1.494 3.479c-.895.895-2.035 1.3-3.48 1.494c-1.411.19-3.22.19-5.529.19h-.114c-2.309 0-4.118 0-5.53-.19c-1.444-.194-2.584-.6-3.479-1.494c-.895-.895-1.3-2.035-1.494-3.48c-.19-1.411-.19-3.22-.19-5.529v-.114c0-2.309 0-4.118.19-5.53c.194-1.444.6-2.584 1.494-3.479c.895-.895 2.035-1.3 3.48-1.494c1.411-.19 3.22-.19 5.529-.19m4.827 1.026a3.503 3.503 0 0 1 4.954 4.953l-6.648 6.649c-.371.37-.604.604-.863.806a5.34 5.34 0 0 1-.987.61c-.297.141-.61.245-1.107.411l-2.905.968a1.492 1.492 0 0 1-1.887-1.887l.968-2.905c.166-.498.27-.81.411-1.107c.167-.35.372-.68.61-.987c.202-.26.435-.492.806-.863zm3.893 1.06a2.003 2.003 0 0 0-2.832 0l-.376.377c.022.096.054.21.098.338c.143.413.415.957.927 1.469a3.875 3.875 0 0 0 1.807 1.025l.376-.376a2.003 2.003 0 0 0 0-2.832m-1.558 4.391a5.397 5.397 0 0 1-1.686-1.146a5.395 5.395 0 0 1-1.146-1.686L11.218 9.95c-.417.417-.58.582-.72.76a3.84 3.84 0 0 0-.437.71c-.098.203-.172.423-.359.982l-.431 1.295l1.032 1.033l1.295-.432c.56-.187.779-.261.983-.358c.251-.12.49-.267.71-.439c.177-.139.342-.302.759-.718z" clip-rule="evenodd"/></svg><span>编辑本文</span></a>
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a><a class="buttom" onclick="util.scrollComment()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M10.46 1.25h3.08c1.603 0 2.86 0 3.864.095c1.023.098 1.861.3 2.6.752a5.75 5.75 0 0 1 1.899 1.899c.452.738.654 1.577.752 2.6c.095 1.004.095 2.261.095 3.865v1.067c0 1.141 0 2.036-.05 2.759c-.05.735-.153 1.347-.388 1.913a5.75 5.75 0 0 1-3.112 3.112c-.805.334-1.721.408-2.977.43a10.81 10.81 0 0 0-.929.036c-.198.022-.275.054-.32.08c-.047.028-.112.078-.224.232c-.121.166-.258.396-.476.764l-.542.916c-.773 1.307-2.69 1.307-3.464 0l-.542-.916a10.605 10.605 0 0 0-.476-.764c-.112-.154-.177-.204-.224-.232c-.045-.026-.122-.058-.32-.08c-.212-.023-.49-.03-.93-.037c-1.255-.021-2.171-.095-2.976-.429A5.75 5.75 0 0 1 1.688 16.2c-.235-.566-.338-1.178-.389-1.913c-.049-.723-.049-1.618-.049-2.76v-1.066c0-1.604 0-2.86.095-3.865c.098-1.023.3-1.862.752-2.6a5.75 5.75 0 0 1 1.899-1.899c.738-.452 1.577-.654 2.6-.752C7.6 1.25 8.857 1.25 10.461 1.25M6.739 2.839c-.914.087-1.495.253-1.959.537A4.25 4.25 0 0 0 3.376 4.78c-.284.464-.45 1.045-.537 1.96c-.088.924-.089 2.11-.089 3.761v1c0 1.175 0 2.019.046 2.685c.045.659.131 1.089.278 1.441a4.25 4.25 0 0 0 2.3 2.3c.515.214 1.173.294 2.429.316h.031c.398.007.747.013 1.037.045c.311.035.616.104.909.274c.29.17.5.395.682.645c.169.232.342.525.538.856l.559.944a.52.52 0 0 0 .882 0l.559-.944c.196-.331.37-.624.538-.856c.182-.25.392-.476.682-.645c.293-.17.598-.24.909-.274c.29-.032.639-.038 1.037-.045h.032c1.255-.022 1.913-.102 2.428-.316a4.25 4.25 0 0 0 2.3-2.3c.147-.352.233-.782.278-1.441c.046-.666.046-1.51.046-2.685v-1c0-1.651 0-2.837-.089-3.762c-.087-.914-.253-1.495-.537-1.959a4.25 4.25 0 0 0-1.403-1.403c-.464-.284-1.045-.45-1.96-.537c-.924-.088-2.11-.089-3.761-.089h-3c-1.651 0-2.837 0-3.762.089" clip-rule="evenodd"/><path fill="currentColor" d="M9 11a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0a1 1 0 0 1 2 0"/></svg><span>参与讨论</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+  <script type="module">
+  const el = document.querySelector('#comments #giscus');
+  util.viewportLazyload(el, load_discus, false);
+
+  function load_discus() {
+    if (!el) return;
+    try {
+        el.innerHTML = '';
+      } catch (error) {
+        console.error(error);
+      }
+      const script = document.createElement('script');
+      script.async = true;
+      for (const key of Object.keys(el.attributes)) {
+        const attr = el.attributes[key];
+        if (['class', 'id'].includes(attr.name) === false) {
+          script.setAttribute(attr.name, attr.value);
+        }
+      }
+      el.appendChild(script);
+  }
+</script>
+
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
