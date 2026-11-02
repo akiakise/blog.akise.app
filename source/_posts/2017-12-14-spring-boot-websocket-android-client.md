@@ -1,10 +1,11 @@
 ---
 title: SpringBoot WebSocket 发送广播，Android 接收
-copyright: true
 date: 2017-12-14 10:16:11 +0800
 categories: [Java]
 tags: [java, spring boot, websocket, android]
-topic: spring
+collection:
+  profile: topic
+  id: spring
 ---
 
 ## WebSocket

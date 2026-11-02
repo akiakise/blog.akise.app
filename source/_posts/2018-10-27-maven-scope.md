@@ -1,6 +1,5 @@
 ---
 title: Maven 中的 Scope
-copyright: true
 date: 2018-10-27 14:33:31 +0800
 categories: [Technology]
 tags: [maven, java]

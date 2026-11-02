@@ -7,7 +7,6 @@ tags:
   - mac
   - alfred
 cover: /img/2024/alfred-accurate-calculator/alfred-calculator-with-big-number.png
-banner: /img/2024/alfred-accurate-calculator/alfred-calculator-with-big-number.png
 ---
 
 ## 背景

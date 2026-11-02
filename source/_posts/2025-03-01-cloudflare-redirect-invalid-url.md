@@ -5,8 +5,9 @@ categories: Technology
 date: 2025-03-01 19:13:18
 description: 网上分享网站链接时偶尔会漏加空格，这时多数平台都会将原始链接+跟着的内容识别为新链接，用户点进来是 404 非常尴尬，我们借助 Cloudflare 的重定向规则来解决此问题
 cover: /img/2025/cloudflare-redirect-invalid-url/cover.png
-banner: /img/2025/cloudflare-redirect-invalid-url/cover.png
-topic: play
+collection:
+  profile: topic
+  id: play
 ---
 
 在前文讲了如何使用 Cloudflare 重定向规则实现近似“无端口”访问带 IP 的服务（{% post_link cloudflare-redirect-rule %}）后，我们继续利用重定向规则来解决另一个常见的链接错误的问题。

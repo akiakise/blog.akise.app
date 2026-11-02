@@ -1,4 +1,9 @@
 name: Spring
-title: Spring 相关
+# v1 的 title 是展示用长名，v2 中对应 headline，短名继续用 name。
+headline: Spring 相关
 description: Spring 技术相关
-order_by: -date
+# v1: order_by: -date
+listing:
+  sort:
+    field: date
+    direction: desc

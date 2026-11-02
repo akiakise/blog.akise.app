@@ -1,6 +1,5 @@
 ---
 title: Nginx 自定义静态资源位置
-copyright: true
 date: 2017-10-27 20:43:18 +0800
 categories: [Nginx]
 tags: [nginx, linux]

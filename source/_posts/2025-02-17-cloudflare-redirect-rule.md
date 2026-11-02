@@ -5,8 +5,9 @@ categories: Technology
 date: 2025-02-17 10:32:09
 description: 在 80/443 端口无法顺畅提供服务时往往需要暴露其他端口，而服务数量多了之后端口记忆也是一个问题，本文通过借助 Cloudflare 的功能来实现“无端口”访问非 80/443 端口的服务。
 cover: /img/2025/cloudflare-redirect-rule/cover.png
-banner: /img/2025/cloudflare-redirect-rule/cover.png
-topic: play
+collection:
+  profile: topic
+  id: play
 ---
 
 如果你拥有一个国内服务器或者你的宽带有公网 IP，那么你一定知道在当前环境下尝试通过 80/443 提供服务有多困难。多数情况下我们只能另选其他端口，然而非 80/443 端口在访问时必须准确写出端口，这在服务数量众多的情况下成本非常高。

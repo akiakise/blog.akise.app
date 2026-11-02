@@ -1,4 +1,8 @@
 name: Playground
-title: Playground
+# v1 的 title 与 name 相同，v2 中 name 即可承担展示名，无需 headline。
 description: 探索世界的好奇心万岁
-order_by: -date
+# v1: order_by: -date
+listing:
+  sort:
+    field: date
+    direction: desc

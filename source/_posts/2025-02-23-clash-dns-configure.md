@@ -5,8 +5,9 @@ date: 2025-02-23 11:49:12
 categories: Technology
 description: Clash DNS 配置指南，详细描述 Clash 中 DNS 解析流程与推荐配置
 cover: /img/2025/clash-dns-configure/cover.png
-banner: /img/2025/clash-dns-configure/cover.png
-topic: play
+collection:
+  profile: topic
+  id: play
 ---
 
 随着互联网技术的发展与广告联盟的互联互通，大家对隐私的重视程度也越来越高，而 DNS 作为网络基础设施，其{% mark 泄露 color:error %}的风险与泄露后导致的问题影响也越来越大。泄露可能涉及的问题主要有：用户通过虚拟专用网络或网络代理请求的域名被记录或审查、用户浏览历史被记录和分析用于广告投放或数据挖掘。同时 ISP 的 DNS 也天生自带污染和和劫持，并不推荐使用。

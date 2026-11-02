@@ -1,10 +1,17 @@
 ---
 title: 关于本站
 date: 2017-07-20 00:00:00
-comments: false
-banner: /img/website/cover.jpg
-menu_id: social
-leftbar: [social, recent]
+# v1: comments: false
+comments:
+  enabled: false
+# v1: menu_id: social
+active_menu: social
+# v1: leftbar: [social, recent]；全站不再展示「最近更新」组件
+leftbar:
+  widgets:
+    - social
+# v1: banner 是图片字符串；v2 的横幅背景取 cover，banner 只保留结构化参数。
+cover: /img/website/cover.jpg
 ---
 
 {% quot 网站搭建 icon:hashtag %}

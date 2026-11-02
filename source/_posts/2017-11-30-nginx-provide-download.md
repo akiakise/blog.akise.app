@@ -1,6 +1,5 @@
 ---
 title: Nginx 提供文件下载服务
-copyright: true
 date: 2017-11-30 17:21:54 +0800
 categories: [Nginx]
 tags: [nginx, linux]

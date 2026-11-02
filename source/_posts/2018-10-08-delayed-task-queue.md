@@ -1,6 +1,5 @@
 ---
 title: 聊聊延时任务队列
-copyright: true
 date: 2018-10-08 14:38:01 +0800
 categories: [Technology]
 tags: [queue, redis, rabbitmq]

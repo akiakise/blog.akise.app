@@ -1,13 +1,24 @@
 ---
 title: 小伙伴们
-subtitle: 总有一天，地球发出的光将穿过那些星座，在每一个星座中，我们将再次年轻
 robots: noindex,nofollow
 sitemap: false
-comment_title: 快来交换友链吧～
-header: false
-banner: /img/website/friends.png
-menu_id: social
-leftbar: [social, recent]
+# v1: header: false，关闭移动端页头品牌区。
+topbar:
+  enabled: false
+# v1: comment_title
+comments:
+  title: 快来交换友链吧～
+# v1: menu_id: social
+active_menu: social
+# v1: leftbar: [social, recent]；全站不再展示「最近更新」组件
+leftbar:
+  widgets:
+    - social
+# v1: banner 是图片字符串；v2 的横幅背景取 cover，
+# v1 subtitle 迁移为 banner.tagline。
+cover: /img/website/friends.png
+banner:
+  tagline: 总有一天，地球发出的光将穿过那些星座，在每一个星座中，我们将再次年轻
 ---
 
 {% friends api:https://raw.githubusercontent.com/akiakise/blog.akise.app/refs/heads/output/v2/data.json %}

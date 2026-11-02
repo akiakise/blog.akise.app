@@ -1,6 +1,5 @@
 ---
 title: 利用 Travis CI 自动测试、部署 Java Web 项目到 Tomcat
-copyright: true
 date: 2018-05-27 14:52:15 +0800
 categories: [Technology]
 tags: [java, ci]

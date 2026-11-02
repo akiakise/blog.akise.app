@@ -1,4 +1,9 @@
 name: NAS
-title: NAS 折腾记录
+# v1 的 title 是展示用长名，v2 中对应 headline，短名继续用 name。
+headline: NAS 折腾记录
 description: 关于我折腾 NAS 的二三事
-order_by: -date
+# v1: order_by: -date
+listing:
+  sort:
+    field: date
+    direction: desc

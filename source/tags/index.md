@@ -1,6 +1,7 @@
 ---
 title: 标签
-type: "tags"
 date: 2017-07-20 00:00:00
-comments: false
+# v1: comments: false
+comments:
+  enabled: false
 ---

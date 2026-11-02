@@ -1,10 +1,11 @@
 ---
 title: Spring Boot 集成 Shiro 权限管理与密码加盐加密存储
-copyright: true
 date: 2018-01-14 19:56:15 +0800
 categories: [Java]
 tags: [java, spring boot, shiro]
-topic: spring
+collection:
+  profile: topic
+  id: spring
 ---
 
 在 Spring 中，流行的涉及权限管理的框架有两个：Spring Security 和 Apache Shiro。但是去了解一下 Spring Security 就知道，简单的权限管理根本用不到那么复杂的功能。在自己的项目中，我更倾向于使用简单明了的 Apache Shiro。

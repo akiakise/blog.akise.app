@@ -1,6 +1,5 @@
 ---
 title: Centos7 系统使用 Gunicorn、Supervisor、Nginx 部署使用了工厂模式的 Flask 项目
-copyright: true
 date: 2017-10-01 14:21:30
 categories: [Python]
 tags: [python, flask, deployment]
