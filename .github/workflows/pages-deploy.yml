@@ -23,17 +23,21 @@ jobs:
     steps:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - name: 1. git checkout...
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
-    - name: 2. setup nodejs...
-      uses: actions/setup-node@v2
+    - name: 2. setup pnpm...
+      uses: pnpm/action-setup@v4
 
-    - name: 3. install hexo...
-      run: |
-        npm install -g hexo-cli
-        npm install
-        
-    - name: 4. setup env...
+    - name: 3. setup nodejs...
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
+
+    - name: 4. install dependencies...
+      run: pnpm install --frozen-lockfile
+
+    - name: 5. setup env...
       env:
         SSH_PRIVATE_KEY: ${{ secrets.AKIAKISE_PRIVATE_KEY }}
       run: |
@@ -45,12 +49,12 @@ jobs:
         git config --global user.email "akiakise@outlook.com"
         git config --global user.name "akiakise"
         sudo timedatectl set-timezone Asia/Shanghai
-    
-    - name: 5. hexo generate...
+
+    - name: 6. hexo generate...
       run: |
-        hexo clean
-        hexo generate
-    
-    - name: 6. hexo deploy...
+        pnpm exec hexo clean
+        pnpm exec hexo generate
+
+    - name: 7. hexo deploy...
       run: |
-        hexo deploy
+        pnpm exec hexo deploy

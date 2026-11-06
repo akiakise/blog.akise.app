@@ -1,0 +1,5 @@
+allowBuilds:
+  hexo-util: true
+  sharp: true
+  # highlight.js 的 postinstall 只打印一条弃用提示（node deprecated.js），不需要执行。
+  highlight.js: false
