@@ -168,7 +168,10 @@ features:
   # 对应 v1 位于页脚的 switchTheme() 按钮；开启后才提供 window.setColorScheme。
   color_scheme_switch:
     enabled: true
-
+  diagrams:
+    provider: mermaid
+    mermaid:
+      theme: neutral
 # -----------------------------------------------------------------------------
 # 高级注入
 # -----------------------------------------------------------------------------
