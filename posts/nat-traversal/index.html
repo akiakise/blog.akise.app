@@ -1,0 +1,541 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+  
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/2.0.0" theme-name="Stellar" theme-version="2.0.0">
+  
+  
+  <meta name="generator" content="Hexo 8.1.2">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title data-stellar-page-meta="">内网穿透详解 - AA博客</title>
+  <script data-stellar-script="core">
+    (function () {
+      var key = 'stellar:v2:leftbar-state';
+      var fallback = "expanded";
+      try {
+        var value = localStorage.getItem(key);
+        document.documentElement.dataset.leftbarState = value === 'collapsed' || value === 'expanded' ? value : fallback;
+      } catch (error) {
+        document.documentElement.dataset.leftbarState = fallback;
+      }
+    })();
+  </script>
+
+  <meta name="description" content="详细描述多种内网穿透方案的实现细节，包括基于 Tailscale 的内网穿透、基于 FRP 的内网穿透、基于 DDNS 的公网 IPv4 和 IPv6 穿透。" data-stellar-page-meta="">
+<meta property="og:type" content="article" data-stellar-page-meta="">
+<meta property="og:title" content="内网穿透详解" data-stellar-page-meta="">
+<meta property="og:url" content="https://blog.akise.app/posts/nat-traversal/" data-stellar-page-meta="">
+<meta property="og:site_name" content="AA博客" data-stellar-page-meta="">
+<meta property="og:description" content="详细描述多种内网穿透方案的实现细节，包括基于 Tailscale 的内网穿透、基于 FRP 的内网穿透、基于 DDNS 的公网 IPv4 和 IPv6 穿透。" data-stellar-page-meta="">
+<meta property="og:locale" content="zh_CN" data-stellar-page-meta="">
+<meta property="og:image" content="https://blog.akise.app/img/2025/nat-traversal/cover.png" data-stellar-page-meta="">
+<meta property="article:author" content="Aki Akise" data-stellar-page-meta="">
+<meta property="article:published_time" content="2025-01-19T04:59:28.000Z" data-stellar-page-meta="">
+<meta property="article:modified_time" content="2026-11-06T10:48:31.000Z" data-stellar-page-meta="">
+<meta property="article:tag" content="DDNS" data-stellar-page-meta="">
+<meta property="article:tag" content="FRP" data-stellar-page-meta="">
+<meta property="article:tag" content="NAS" data-stellar-page-meta="">
+<meta property="article:tag" content="Tailscale" data-stellar-page-meta="">
+<meta name="twitter:card" content="summary_large_image" data-stellar-page-meta="">
+<meta name="twitter:image" content="https://blog.akise.app/img/2025/nat-traversal/cover.png" data-stellar-page-meta=""><meta name="twitter:title" content="内网穿透详解" data-stellar-page-meta="">
+  
+  
+  <meta name="keywords" content="NAS,DDNS,FRP,Tailscale" data-stellar-page-meta="">
+
+  <!-- feed -->
+  
+    
+
+    
+      
+        <link rel="alternate" href="/atom.xml" title="AA博客" type="application/atom+xml">
+      
+    
+  
+
+  <link rel="preload" href="/css/main.css?v=2.0.0" as="style">
+  <link rel="stylesheet" href="/css/main.css?v=2.0.0">
+  <style>:root{--text-loading:"正在加载";--text-loading-error:"加载失败，请稍后重试。"}</style>
+
+
+  
+    <link rel="shortcut icon" href="/img/favicons/favicon.ico">
+  
+
+  
+
+  <script type="application/ld+json" data-stellar-page-meta="">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Aki Akise","sameAs":[],"image":"https://blog.akise.app/img/website/avatar.jpg"},"dateCreated":"2025-01-19T12:59:28+08:00","dateModified":"2026-11-06T18:48:31+08:00","datePublished":"2025-01-19T12:59:28+08:00","description":"前言内网穿透的概念不再赘述，通常我们是希望能够在外出、旅行等不在家情况下也能访问家庭网络（例如查看 NAS 中的照片视频、远程连接内网设备进行办公等），而基于家庭网络环境，内网穿透又有几种不同的方案：\n\n有公网 IPv4：DDNS\n有公网 IPv6：DDNS\n无公网 IP 有云服务器：FRP\n无公网 IP 无云服务器：Tailscale、ZeroTier 等虚拟组网工具\n\n本文以我的家庭网络...","headline":"内网穿透详解","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.akise.app/posts/nat-traversal/"},"publisher":{"@type":"Organization","name":"Aki Akise","sameAs":[],"image":"https://blog.akise.app/img/website/avatar.jpg","logo":{"@type":"ImageObject","url":"https://blog.akise.app/img/website/avatar.jpg"}},"url":"https://blog.akise.app/posts/nat-traversal/","image":["/img/2025/nat-traversal/cover.png"],"keywords":"NAS, DDNS, FRP, Tailscale","thumbnailUrl":"/img/2025/nat-traversal/cover.png"}</script>
+  
+
+  <link rel="stylesheet" href="/css/stellar-icons.css?v=7c185ad1a9a79674">
+  <link rel="preload" as="script" href="/js/stellar-icons.js?v=39c6ac17e854ffe2">
+  
+  
+</head>
+<body data-page-type="content" data-page-layout="post" data-article-style="tech"><div data-stellar-runtime-region="" id="site-cover" class="site-cover"></div><div class="site-shell" id="start" data-regions="leftbar rightbar"><div class="site-workspace">
+<aside data-stellar-runtime-region="" id="leftbar-region" class="site-region site-region--leftbar" data-region="leftbar" aria-label="Leftbar"><div class="site-region__surface ui-surface"><div class="site-region__decoration" aria-hidden="true"></div><div class="site-region__viewport"><header class="site-region__header site-region__zone site-region__zone--top">
+    <div class="widget-instance widget-instance--brand" data-widget-id="leftbar:fixed:brand" data-presentation="leftbar" data-leftbar-rail="">
+<header class="brand-header brand-header--regular brand-header--site"><div class="brand-wrap"><a class="brand-image brand-image--avatar" href="/"><img no-lazy="" src="/img/website/avatar.jpg" alt="" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;"></a><a class="brand-title" href="/"><div class="brand-name">AA博客</div><div class="brand-tagline cap">Keep Calm and Carry On</div></a></div><div class="brand-search">
+
+<div class="ui-collection" data-layout="list" data-variant="nav" data-density="auto">
+  
+    
+<button class="ui-collection__item ui-interactive card-hover card-hover--spotlight search-trigger has-hover-surface" type="button" title="搜索" aria-label="搜索" data-shell-action="open-search" data-search-instance="leftbar-brand-search" data-search-domain="topic:nas" data-search-domain-label="NAS" data-search-domain-blog="true">
+  
+  <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Adapted from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3M3 13h3M3 18h8M16.83 13.83l3.76 3.76"></path><circle cx="14" cy="11" r="4"></circle></g></svg></span>
+  
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">搜索</span>
+      
+      
+    </span>
+  
+  <kbd class="search-shortcut" aria-hidden="true">⌘K</kbd>
+
+  
+</button>
+
+  
+</div>
+
+
+</div></header>
+</div>
+  </header>
+  <div class="site-region__body site-region__zone site-region__zone--body">
+    <div class="widget-instance widget-instance--menu" data-widget-id="leftbar:fixed:menu" data-presentation="leftbar" data-leftbar-rail="">
+
+
+<nav class="menu dis-select">
+<div class="ui-collection" data-layout="list" data-variant="nav" data-density="auto">
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight is-active is-themed" href="/" title="博客" aria-current="page" style="--item-theme:#1BCDFC;">
+  
+  <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"></path><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"></path></svg></span>
+  
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">博客</span>
+      
+      
+    </span>
+  
+  
+  <span class="ui-collection__indicator"></span>
+</a>
+
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight is-themed" href="/friends/" title="社交" style="--item-theme:#F44336;">
+  
+  <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"></path><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"></path></svg></span>
+  
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">社交</span>
+      
+      
+    </span>
+  
+  
+  
+</a>
+
+  
+</div>
+
+</nav>
+
+</div>
+    <div class="widgets widget-stack widget-stack--leftbar widget-stack--body"><div class="widget-instance widget-instance--related" data-widget-id="leftbar:0:related" data-presentation="leftbar" data-leftbar-rail="">
+
+<widget class="widget-wrapper related-widget">
+  
+    <div class="widget-header dis-select">
+      <span class="name">专栏：NAS 折腾记录</span>
+      
+    </div>
+  
+  <div class="widget-body"><div class="ui-collection" data-layout="list" data-variant="nav" data-density="compact">
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight" href="/posts/nas/" title="我在 NAS 上都部署了什么服务">
+  
+  
+  <span class="ui-collection__initial" aria-hidden="true">我</span>
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">我在 NAS 上都部署了什么服务</span>
+      
+      
+    </span>
+  
+  
+  
+</a>
+
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight is-active" href="/posts/nat-traversal/" title="内网穿透详解" aria-current="page">
+  
+  
+  <span class="ui-collection__initial" aria-hidden="true">内</span>
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">内网穿透详解</span>
+      
+      
+    </span>
+  
+  
+  <span class="ui-collection__indicator"></span>
+</a>
+
+  
+</div></div>
+  
+</widget>
+
+
+</div></div>
+  </div>
+  <footer class="site-region__footer">
+    <div class="site-region__footer-actions"><div class="widget-instance widget-instance--actions" data-widget-id="leftbar:fixed:actions" data-presentation="leftbar">
+<div class="region-actions social-wrap ui-collection" data-layout="inline" data-variant="nav" data-density="compact"><a class="social ui-collection__item ui-interactive card-hover card-hover--spotlight is-icon-only" title="GitHub" href="https://github.com/akiakise" target="_blank" rel="external nofollow noopener noreferrer"><span class="ui-icon"><img no-lazy="" src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;"></span></a>
+<details class="dropdown social-dropdown"><summary class="dropdown-trigger ui-interactive social ui-collection__item card-hover card-hover--spotlight is-icon-only" title="配色" aria-label="配色"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="currentColor"><path d="M19.9001 2.30719C19.7392 1.8976 19.1616 1.8976 19.0007 2.30719L18.5703 3.40247C18.5212 3.52752 18.4226 3.62651 18.298 3.67583L17.2067 4.1078C16.7986 4.26934 16.7986 4.849 17.2067 5.01054L18.298 5.44252C18.4226 5.49184 18.5212 5.59082 18.5703 5.71587L19.0007 6.81115C19.1616 7.22074 19.7392 7.22074 19.9001 6.81116L20.3305 5.71587C20.3796 5.59082 20.4782 5.49184 20.6028 5.44252L21.6941 5.01054C22.1022 4.849 22.1022 4.26934 21.6941 4.1078L20.6028 3.67583C20.4782 3.62651 20.3796 3.52752 20.3305 3.40247L19.9001 2.30719Z"></path><path d="M16.0328 8.12967C15.8718 7.72009 15.2943 7.72009 15.1333 8.12967L14.9764 8.52902C14.9273 8.65407 14.8287 8.75305 14.7041 8.80237L14.3062 8.95987C13.8981 9.12141 13.8981 9.70107 14.3062 9.86261L14.7041 10.0201C14.8287 10.0694 14.9273 10.1684 14.9764 10.2935L15.1333 10.6928C15.2943 11.1024 15.8718 11.1024 16.0328 10.6928L16.1897 10.2935C16.2388 10.1684 16.3374 10.0694 16.462 10.0201L16.8599 9.86261C17.268 9.70107 17.268 9.12141 16.8599 8.95987L16.462 8.80237C16.3374 8.75305 16.2388 8.65407 16.1897 8.52902L16.0328 8.12967Z"></path><path d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" opacity=".5"></path></g></svg></span></summary><div class="dropdown-menu ui-collection" data-layout="list" data-variant="nav" data-density="compact"><button type="button" class="dropdown-item ui-collection__item ui-interactive card-hover card-hover--spotlight" onclick="setColorScheme('light')"><span class="ui-collection__content"><span class="ui-collection__title">浅色</span></span></button><button type="button" class="dropdown-item ui-collection__item ui-interactive card-hover card-hover--spotlight" onclick="setColorScheme('dark')"><span class="ui-collection__content"><span class="ui-collection__title">深色</span></span></button><button type="button" class="dropdown-item ui-collection__item ui-interactive card-hover card-hover--spotlight" onclick="setColorScheme('auto')"><span class="ui-collection__content"><span class="ui-collection__title">跟随系统</span></span></button></div></details>
+</div>
+</div></div>
+    <div class="site-region__system ui-collection" data-layout="inline" data-variant="nav" data-density="compact">
+      <div class="site-region__settings"><div class="widget-instance widget-instance--settings" data-widget-id="leftbar:fixed:settings" data-presentation="leftbar" data-leftbar-rail="">
+<a class="settings-widget ui-collection__item ui-interactive card-hover card-hover--spotlight" href="/settings/" data-profile-provider="giscus" data-profile-identity-enabled="false" data-profile-fallback-avatar="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg" data-settings-placement="leftbar" data-settings-label="设置" aria-label="设置" title="设置">
+  <span class="settings-widget__avatar" aria-hidden="true">
+    <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><path fill-rule="evenodd" d="M12.4277 2C11.3139 2 10.2995 2.6007 8.27081 3.80211L7.58466 4.20846C5.55594 5.40987 4.54158 6.01057 3.98466 7C3.42773 7.98943 3.42773 9.19084 3.42773 11.5937V12.4063C3.42773 14.8092 3.42773 16.0106 3.98466 17C4.54158 17.9894 5.55594 18.5901 7.58466 19.7915L8.27081 20.1979C10.2995 21.3993 11.3139 22 12.4277 22C13.5416 22 14.5559 21.3993 16.5847 20.1979L17.2708 19.7915C19.2995 18.5901 20.3139 17.9894 20.8708 17C21.4277 16.0106 21.4277 14.8092 21.4277 12.4063V11.5937C21.4277 9.19084 21.4277 7.98943 20.8708 7C20.3139 6.01057 19.2995 5.40987 17.2708 4.20846L16.5847 3.80211C14.5559 2.6007 13.5416 2 12.4277 2Z" clip-rule="evenodd" opacity=".5"></path><path d="M12.4277 8.25C10.3567 8.25 8.67773 9.92893 8.67773 12C8.67773 14.0711 10.3567 15.75 12.4277 15.75C14.4988 15.75 16.1777 14.0711 16.1777 12C16.1777 9.92893 14.4988 8.25 12.4277 8.25Z"></path></g></svg></span>
+  </span>
+  <span class="settings-widget__name ui-collection__title">设置</span>
+</a>
+</div></div>
+      <button type="button" class="leftbar-state-toggle ui-collection__item ui-interactive card-hover card-hover--spotlight is-icon-only" aria-label="Collapse leftbar" aria-expanded="true" data-shell-action="toggle-leftbar"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M3.172 4.172C2 5.343 2 7.229 2 11v2c0 3.771 0 5.657 1.172 6.828S6.229 21 10 21h5V3h-5C6.229 3 4.343 3 3.172 4.172" clip-rule="evenodd" opacity=".5"></path><path fill="currentColor" d="M5.5 9.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zm1 4a.75.75 0 0 0 0 1.5h4a.75.75 0 0 0 0-1.5zM22 13v-2c0-3.771 0-5.657-1.172-6.828c-.974-.975-3.192-1.139-5.828-1.166v17.988c2.636-.027 4.854-.191 5.828-1.166C22 18.657 22 16.771 22 13"></path></svg></span></button>
+    </div>
+  </footer></div></div></aside>
+<main data-stellar-runtime-region="" class="site-main" id="main">
+
+
+<div class="article-banner-wrap slide-up"><div class="article banner top" style="--bg-url:url('/img/2025/nat-traversal/cover.png')"><img class="lazy bg" data-src="/img/2025/nat-traversal/cover.png" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1420" height="708" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[194.4495,41.7472,7.9554,1]}" data-stellar-image-source="/img/2025/nat-traversal/cover.png">
+  <div class="content" data-text-adaptive="split">
+    <div class="banner-mask banner-mask-top" aria-hidden="true"></div><div class="banner-mask banner-mask-bottom" aria-hidden="true"></div>
+    <div class="top bread-nav footnote"><div class="top-row"><div class="left" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic/">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/nas/">NAS 折腾记录</a>
+</div></div><div class="meta-row">
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-01-19T04:59:28.000Z">2025-01-19</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-11-06T10:48:31.000Z">2026-11-06</time></span></div>
+</div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>内网穿透详解</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div></div>
+<article class="md-text content slide-up"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>内网穿透的概念不再赘述，通常我们是希望能够在外出、旅行等不在家情况下也能访问家庭网络（例如查看 NAS 中的照片视频、远程连接内网设备进行办公等），而基于家庭网络环境，内网穿透又有几种不同的方案：</p>
+<ol>
+<li>有公网 IPv4：DDNS</li>
+<li>有公网 IPv6：DDNS</li>
+<li>无公网 IP 有云服务器：FRP</li>
+<li>无公网 IP 无云服务器：Tailscale、ZeroTier 等虚拟组网工具</li>
+</ol>
+<p>本文以我的家庭网络环境为例，一篇文章讲明白这几种内网穿透的配置细节，读者可以结合自身的网络环境选取合适的方案。本文我们将所有的服务（Tailscale、FRP、DDNS）都放置在 NAS 上，以内网穿透访问 Windows 远程桌面作为目标：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:561/241;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/target.png" alt="目标" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="561" height="241" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[0,7.9587,94.9414,1]}" data-stellar-image-source="/img/2025/nat-traversal/target.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">目标</span></div></div>
+
+<h1 id="内网门锁"><a href="#内网门锁" class="headerlink" title="内网门锁"></a>内网门锁</h1><p>多数内网穿透都是直接将内网服务穿透后暴露至公网，虽说内网服务也会有各自的密码，但是总会有未知的安全漏洞、我们也有可能误将无密码/弱密码服务暴露出去，最好还是在内网服务前加一层 VPN。本文除 <code>Tailscale</code> 外的方案我们都采用 <code>shadowsocks</code> 作为内网服务的入口，预检所有流量，同时也实现流量的端到端加密：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:321/401;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/with-vpn.png" alt="NAT Traversal with VPN" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="321" height="401" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[272.0075,7.6393,90.7397,1]}" data-stellar-image-source="/img/2025/nat-traversal/with-vpn.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">NAT Traversal with VPN</span></div></div>
+
+<p>由于后续的 FRP、DDNS 方案都会用到 ss-server（多个方案可共用一个 ss-server），因此我们首先来创建下 ss-server。</p>
+<p><code>1.</code> 增加配置文件：</p>
+<div class="tag-plugin copy"><span>$</span><input class="copy-area" id="copy_1" value="mkdir -p /docker/config/ss"><button class="copy-btn" onclick="util.copy(&quot;copy_1&quot;,&quot;复制成功&quot;)"><svg class="icon" viewBox="0 0 1 1" data-icon="copy:copy" aria-hidden="true"></svg></button></div>
+<div class="tag-plugin copy"><span>$</span><input class="copy-area" id="copy_2" value="vim /docker/config/ss/config.json"><button class="copy-btn" onclick="util.copy(&quot;copy_2&quot;,&quot;复制成功&quot;)"><svg class="icon" viewBox="0 0 1 1" data-icon="copy:copy" aria-hidden="true"></svg></button></div>
+
+<p><code>2.</code> 编辑配置文件内容：</p>
+<figure class="highlight json"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="punctuation">{</span></span><br><span class="line">    <span class="attr">"server"</span><span class="punctuation">:</span> <span class="string">"::"</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">"server_port"</span><span class="punctuation">:</span> <span class="number">12300</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">"password"</span><span class="punctuation">:</span> <span class="string">"lalala"</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">"timeout"</span><span class="punctuation">:</span> <span class="number">300</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">"method"</span><span class="punctuation">:</span> <span class="string">"chacha20-ietf-poly1305"</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">"mode"</span><span class="punctuation">:</span> <span class="string">"tcp_and_udp"</span><span class="punctuation">,</span></span><br><span class="line">    <span class="attr">"enable_udp"</span><span class="punctuation">:</span> <span class="literal"><span class="keyword">true</span></span></span><br><span class="line"><span class="punctuation">}</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p><code>3.</code> 使用 docker 管理服务：</p>
+<div class="tag-plugin copy"><span>$</span><input class="copy-area" id="copy_3" value="docker run --name ss --restart=always -p 12300:12300 -p 12300:12300/udp -v /docker/config/ss:/etc/shadowsocks-rust -d teddysun/shadowsocks-rust"><button class="copy-btn" onclick="util.copy(&quot;copy_3&quot;,&quot;复制成功&quot;)"><svg class="icon" viewBox="0 0 1 1" data-icon="copy:copy" aria-hidden="true"></svg></button></div>
+
+<p><code>4.</code> 保险手段（每 30 分钟触发下 ss 启动，如果已启动则命令无效，避免手误将 ss 关掉后无法再连上）：</p>
+<div class="tag-plugin copy"><span>$</span><input class="copy-area" id="copy_4" value="crontab -e"><button class="copy-btn" onclick="util.copy(&quot;copy_4&quot;,&quot;复制成功&quot;)"><svg class="icon" viewBox="0 0 1 1" data-icon="copy:copy" aria-hidden="true"></svg></button></div>
+<div class="tag-plugin colorful note"><div class="title">配置内容</div><div class="body"><p>*/30 * * * * docker start ss</p></div></div>
+
+<p>上边我使用命令形式方便理解和减少截图，实际上在 NAS 中创建和管理容器是有图形化界面的，不过原理相同。</p>
+<h1 id="DDNS-IPv4"><a href="#DDNS-IPv4" class="headerlink" title="DDNS + IPv4"></a>DDNS + IPv4</h1><p>有公网 IP 的情况下，通过 DDNS 实现内网穿透最为简单：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:521/441;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/ddns-ipv4.png" alt="DDNS+IPv4" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="521" height="441" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[0,9.0739,94.1288,1]}" data-stellar-image-source="/img/2025/nat-traversal/ddns-ipv4.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">DDNS+IPv4</span></div></div>
+
+<h2 id="ss-server-配置"><a href="#ss-server-配置" class="headerlink" title="ss-server 配置"></a>ss-server 配置</h2><p>见文章开头「内网门锁」部分。</p>
+<h2 id="DDNS-脚本"><a href="#DDNS-脚本" class="headerlink" title="DDNS 脚本"></a>DDNS 脚本</h2><p>在 NAS 上新增 DDNS 脚本（也可以用已有的 DDNS 组件，原理是一样的）：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#!/bin/sh</span></span><br><span class="line">ipv4=$(curl -sS ipv4.ip.sb)</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"current ipv4: <span class="variable">$ipv4</span>"</span></span><br><span class="line">config_json=$(curl -sS -X GET <span class="string">"https://api.cloudflare.com/client/v4/zones/&lt;ZONE_ID&gt;/dns_records/&lt;RECORD_ID&gt;"</span> -H <span class="string">"X-Auth-Email: &lt;YOUR_EMAIL&gt;"</span> -H <span class="string">"X-Auth-Key: &lt;YOUR_AUTH_KEY&gt;"</span> -H <span class="string">"Content-Type: application/json"</span>)</span><br><span class="line">config_ipv4=$(<span class="built_in">echo</span> <span class="variable">$config_json</span> | sed <span class="string">'s/.*content":"\(.*\)","proxiable.*/\1/g'</span>)</span><br><span class="line"><span class="keyword">if</span> [[ -z <span class="variable">$config_ipv4</span> ]];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"current ipv4 is empty"</span></span><br><span class="line">    <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"config ipv4: <span class="variable">$config_ipv4</span>"</span></span><br><span class="line"><span class="keyword">if</span> [ <span class="string">"<span class="variable">$ipv4</span>"</span> == <span class="string">"<span class="variable">$config_ipv4</span>"</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"current ipv4 and config ipv4 equals, skip"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> $(curl -sS -X PUT <span class="string">"https://api.cloudflare.com/client/v4/zones/&lt;ZONE_ID&gt;/dns_records/&lt;RECORD_ID&gt;"</span> \</span><br><span class="line">        -H <span class="string">"X-Auth-Email: &lt;YOUR_EMAIL&gt;"</span> \</span><br><span class="line">        -H <span class="string">"X-Auth-Key: &lt;YOUR_AUTH_KEY&gt;"</span> \</span><br><span class="line">        -H <span class="string">"Content-Type: application/json"</span> \</span><br><span class="line">        -d <span class="string">'{"type":"A","name":"&lt;YOUR_DOMAIN_NAME&gt;","content":"'</span><span class="variable">$ipv4</span><span class="string">'","ttl":120, "proxied":false}'</span>)	</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>脚本中 <code>&lt;&gt;</code> 中的都是变量，需要替换下：</p>
+<ul>
+<li>ZONE_ID：在 Cloudflare 域名界面右下角的“区域ID”</li>
+<li>RECORD_ID：替换 ZONE_ID 后访问 <code>https://dash.cloudflare.com/api/v4/zones/&lt;ZONE_ID&gt;/dns_records?per_page=200&amp;order=type&amp;direction=asc</code>，找到 name 匹配你域名的记录的 <code>id</code> 字段</li>
+<li>YOUR_EMAIL：你的 Cloudflare 账户邮箱</li>
+<li>YOUR_AUTH_KEY：在 Cloudflare 域名界面右下角的“获取您的 API 令牌”，生成一个可以操作 DNS 的 API 令牌，使用“编辑区域 DNS”模板即可</li>
+<li>YOUR_DOMAIN_NAME：你的 DDNS 要绑定的域名</li>
+</ul>
+<p>注意，脚本会先比对当前数据是否一致，所以变量中 RECORD_ID 和 YOUR_DOMAIN_NAME 是一一对应的，即 RECORD_ID 应该就是 YOUR_DOMAIN_NAME 对应的 id。</p>
+<h2 id="端口转发"><a href="#端口转发" class="headerlink" title="端口转发"></a>端口转发</h2><p>在光猫/路由器（桥接）上配置端口转发，将 <code>12300</code> 端口的流量转发至 NAS：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:1997/1793;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/ddns-forward.png" alt="DDNS Forward" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1997" height="1793" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[190.5519,9.5648,28.5506,1]}" data-stellar-image-source="/img/2025/nat-traversal/ddns-forward.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">DDNS Forward</span></div></div>
+
+<h2 id="ss-client-配置"><a href="#ss-client-配置" class="headerlink" title="ss-client 配置"></a>ss-client 配置</h2><p>客户端通过指定 IP 规则来实现用内网 IP 访问服务，以 <code>Quantumult X</code> 配置举例：</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[server_local]</span><br><span class="line">shadowsocks=ddns.domain.com:12300, method=chacha20-ietf-poly1305, password=lalala, fast-open=false, udp-relay=true, tag=ss</span><br><span class="line"></span><br><span class="line">[filter_local]</span><br><span class="line"># 我的内网网段为 192.168.10.x </span><br><span class="line">ip-cidr, 192.168.10.0/24, ss</span><br><span class="line">ip-cidr, 192.168.0.0/16, direct</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这样，客户端在访问 <code>192.168.10.x</code> 时 <code>Quantumult X</code> 就会将流量路由到 ss 节点，ss 节点看到域名后会去解析其对应的公网 IP，再然后 ss-client 会将流量加密后发往光猫/路由器（桥接）的 <code>12300</code> 端口，光猫/路由器（桥接）再依据端口转发规则将流量转发到 NAS 上的 ss-server，ss-server 解密流量后访问 <code>192.168.10.x</code>。</p>
+<h2 id="优缺点"><a href="#优缺点" class="headerlink" title="优缺点"></a>优缺点</h2><p>DDNS 方案的优点是不需要中转，流量直达家里的设备，能轻松跑到家宽上传上限，唯一的缺点是必须有公网 IP。</p>
+<h1 id="DDNS-IPv6"><a href="#DDNS-IPv6" class="headerlink" title="DDNS + IPv6"></a>DDNS + IPv6</h1><p>受限于当前公网 IPv4 越来越难拿到，能给每一粒沙子都分配一个 IP 的 IPv6 成了另一个可行方案：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:521/441;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/ddns-ipv6.png" alt="DDNS+IPv6" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="521" height="441" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[0,9.0642,94.1238,1]}" data-stellar-image-source="/img/2025/nat-traversal/ddns-ipv6.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">DDNS+IPv6</span></div></div>
+
+<p>依然是这张图，不过红线上的流量变成了 IPv6。</p>
+<h2 id="ss-server-配置-1"><a href="#ss-server-配置-1" class="headerlink" title="ss-server 配置"></a>ss-server 配置</h2><p>见文章开头「内网门锁」部分。</p>
+<h2 id="DDNS-脚本-1"><a href="#DDNS-脚本-1" class="headerlink" title="DDNS 脚本"></a>DDNS 脚本</h2><p>在 NAS 上新增 DDNS 脚本（也可以用已有的 DDNS 组件，原理是一样的）：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">ipv6=$(curl -sS ipv6.ip.sb)</span><br><span class="line"><span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"current ipv6: <span class="variable">$ipv6</span>"</span></span><br><span class="line">config_json_v6=$(curl -sS -X GET <span class="string">"https://api.cloudflare.com/client/v4/zones/&lt;ZONE_ID&gt;/dns_records/&lt;RECORD_ID_V6&gt;"</span> -H <span class="string">"X-Auth-Email: &lt;YOUR_EMAIL&gt;"</span> -H <span class="string">"X-Auth-Key: &lt;YOUR_AUTH_KEY&gt;"</span> -H <span class="string">"Content-Type: application/json"</span>)</span><br><span class="line">config_ipv6=$(<span class="built_in">echo</span> <span class="variable">$config_json_v6</span> | sed <span class="string">'s/.*content":"\(.*\)","proxiable.*/\1/g'</span>)</span><br><span class="line"><span class="keyword">if</span> [[ -z <span class="variable">$config_ipv6</span> ]];</span><br><span class="line"><span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"current ipv6 is empty"</span></span><br><span class="line">    <span class="built_in">exit</span> 1</span><br><span class="line"><span class="keyword">fi</span></span><br><span class="line"><span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"config ipv6: <span class="variable">$config_ipv6</span>"</span></span><br><span class="line"><span class="keyword">if</span> [ <span class="string">"<span class="variable">$ipv6</span>"</span> == <span class="string">"<span class="variable">$config_ipv6</span>"</span> ]; <span class="keyword">then</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> <span class="string">"current ipv6 and config ipv6 equals, skip"</span></span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    <span class="built_in">echo</span> <span class="string">'['</span>`<span class="built_in">date</span> +<span class="string">"%Y-%m-%d %H:%M:%S"</span>`<span class="string">']'</span> $(curl -sS -X PUT <span class="string">"https://api.cloudflare.com/client/v4/zones/&lt;ZONE_ID&gt;/dns_records/&lt;RECORD_ID_V6&gt;"</span> \</span><br><span class="line">        -H <span class="string">"X-Auth-Email: &lt;YOUR_EMAIL&gt;"</span> \</span><br><span class="line">        -H <span class="string">"X-Auth-Key: &lt;YOUR_AUTH_KEY&gt;"</span> \</span><br><span class="line">        -H <span class="string">"Content-Type: application/json"</span> \</span><br><span class="line">        -d <span class="string">'{"type":"AAAA","name":"&lt;YOUR_DOMAIN_NAME_V6&gt;","content":"'</span><span class="variable">$ipv6</span><span class="string">'","ttl":120, "proxied":false}'</span>)	</span><br><span class="line"><span class="keyword">fi</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>脚本中 <code>&lt;&gt;</code> 中的都是变量，需要替换下：</p>
+<ul>
+<li>ZONE_ID：在 Cloudflare 域名界面右下角的“区域ID”</li>
+<li>RECORD_ID_V6：替换 ZONE_ID 后访问 <code>https://dash.cloudflare.com/api/v4/zones/&lt;ZONE_ID&gt;/dns_records?per_page=200&amp;order=type&amp;direction=asc</code>，找到 name 匹配你域名的记录的 <code>id</code> 字段</li>
+<li>YOUR_EMAIL：你的 Cloudflare 账户邮箱</li>
+<li>YOUR_AUTH_KEY：在 Cloudflare 域名界面右下角的“获取您的 API 令牌”，生成一个可以操作 DNS 的 API 令牌，使用“编辑区域 DNS”模板即可</li>
+<li>YOUR_DOMAIN_NAME_V6：你的 DDNS 要绑定的域名</li>
+</ul>
+<p>注意，脚本会先比对当前数据是否一致，所以变量中 RECORD_ID_V6 和 YOUR_DOMAIN_NAME_V6 是一一对应的，即 RECORD_ID_V6 应该就是 YOUR_DOMAIN_NAME_V6 对应的 id。</p>
+<h2 id="防火墙放行配置"><a href="#防火墙放行配置" class="headerlink" title="防火墙放行配置"></a>防火墙放行配置</h2><p>在 IPv6 情况下，端口转发已经没有必要了，因为所有内网设备分配的也都是公网 IP，我们需要做的是放行 ss-server 所在机器的防火墙。但是内网设备分配的公网 IP 也会动态变化，我们应该如何配置防火墙才能在 IP 变化时不需要调整配置呢？可以用 <a target="_blank" rel="noopener" href="https://networklessons.com/ipv6/ipv6-eui-64-explained" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>EUI-64 地址</a>。</p>
+<p>首先找到 ss-server 所在机器的 IPv6 地址，假设为 <code>2001:2002:2003:2004:****:**ff:fe**:****</code>，记下 <code>****:**ff:fe**:****</code> 部分，使用 EUI-64 <code>&lt;需要暴露的主机的后缀&gt;/::ffff:ffff:ffff:ffff</code>。</p>
+<p>假设我们的 IPv6 地址为 <code>2001:2002:2003:2004:1:20ff:fe25:2025</code>，则对应 EUI-64 地址为 <code>1:20ff:fe25:2025/::ffff:ffff:ffff:ffff</code>，将这个地址填入防火墙放行即可：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:1895/1345;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/ipv6-firewall-allow.png" alt="IPv6 Firewall Allow" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1895" height="1345" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[195.702,9.5216,33.7189,1]}" data-stellar-image-source="/img/2025/nat-traversal/ipv6-firewall-allow.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">IPv6 Firewall Allow</span></div></div>
+
+<p>注意：<strong>千万不要关闭 IPv6 防火墙，除非你明确知道这有什么后果！！！！！</strong></p>
+<h2 id="客户端配置"><a href="#客户端配置" class="headerlink" title="客户端配置"></a>客户端配置</h2><p>客户端通过指定 IP 规则来实现用内网 IP 访问服务，以 <code>Quantumult X</code> 配置举例：</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[server_local]</span><br><span class="line">shadowsocks=ddnsv6.domain.com:12300, method=chacha20-ietf-poly1305, password=lalala, fast-open=false, udp-relay=true, tag=ss</span><br><span class="line"></span><br><span class="line">[filter_local]</span><br><span class="line"># 我的内网网段为 192.168.10.x </span><br><span class="line">ip-cidr, 192.168.10.0/24, ss</span><br><span class="line">ip-cidr, 192.168.0.0/16, direct</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这样，客户端在访问 <code>192.168.10.x</code> 时 <code>Quantumult X</code> 就会将流量路由到 ss 节点，ss 节点看到域名后会去解析其对应的公网 IP，再然后 ss-client 会将流量加密后发往光猫/路由器（桥接）的 <code>12300</code> 端口，光猫/路由器（桥接）再依据端口转发规则将流量转发到 NAS 上的 ss-server，ss-server 解密流量后访问 <code>192.168.10.x</code>。</p>
+<p>注意，代理软件不能关闭 IPv6，否则域名解析不出来结果。</p>
+<h2 id="优缺点-1"><a href="#优缺点-1" class="headerlink" title="优缺点"></a>优缺点</h2><p>IPv6 方案的优点与 IPv4 相同，都是流量直达家里的设备，并且 IPv6 不需要额外向运营商申请。</p>
+<h1 id="FRP"><a href="#FRP" class="headerlink" title="FRP"></a>FRP</h1><p>针对无公网 IP 有云服务器的情况，我们通过 FRP 来实现内网穿透：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:821/481;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/frp.png" alt="FRP" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="821" height="481" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[0,10.9847,95.9671,1]}" data-stellar-image-source="/img/2025/nat-traversal/frp.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">FRP</span></div></div>
+
+<h2 id="ss-server-配置-2"><a href="#ss-server-配置-2" class="headerlink" title="ss-server 配置"></a>ss-server 配置</h2><p>见文章开头「内网门锁」部分。</p>
+<h2 id="frps-配置"><a href="#frps-配置" class="headerlink" title="frps 配置"></a>frps 配置</h2><p>假设中转服务器 IP 为 <code>1.2.3.4</code>，首先我们通过脚本安装 frp：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget https://raw.githubusercontent.com/mvscode/frps-onekey/master/install-frps.sh -O ./install-frps.sh</span><br><span class="line"><span class="built_in">chmod</span> +x ./install-frps.sh</span><br><span class="line">./install-frps.sh install</span><br></pre></td></tr></tbody></table></figure>
+
+<p>跟着提示安装即可，期间脚本会生成 frps 的 token，这个我们需要记录下。假设 frps 的端口为 <code>12500</code>，token 为 <code>YOURFRPSTOKEN</code>。</p>
+<p>配置 systemd 管理 frps 服务：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/systemd/system/frps.service</span><br></pre></td></tr></tbody></table></figure>
+
+<p>填入以下内容：</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">[Unit]</span><br><span class="line">Description=frps daemon</span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">Type=simple</span><br><span class="line">ExecStart=/usr/local/frps/frps -c /usr/local/frps/frps.toml</span><br><span class="line"></span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br></pre></td></tr></tbody></table></figure>
+
+<p>加载 systemd 服务并启动：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">systemctl daemon-reload</span><br><span class="line">systemctl start frps</span><br><span class="line">systemctl <span class="built_in">enable</span> frps</span><br></pre></td></tr></tbody></table></figure>
+
+<p>检查服务运行状态：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">systemctl status frps</span><br></pre></td></tr></tbody></table></figure>
+
+<p>现在 frps 会随着机器启动自动运行了。</p>
+<h2 id="frpc-配置"><a href="#frpc-配置" class="headerlink" title="frpc 配置"></a>frpc 配置</h2><p>新增配置文件：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> -p /docker/config/frpc</span><br><span class="line">vim /docker/config/frpc/frpc.toml</span><br></pre></td></tr></tbody></table></figure>
+
+<p>配置文件内容：</p>
+<figure class="highlight toml"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">serverAddr</span> = <span class="string">"1.2.3.4"</span></span><br><span class="line"><span class="attr">serverPort</span> = <span class="number">12500</span></span><br><span class="line"><span class="attr">auth.token</span> = <span class="string">"YOURFRPSTOKEN"</span> <span class="comment"># 替换为中转服务器的 token</span></span><br><span class="line"></span><br><span class="line"><span class="section">[[proxies]]</span></span><br><span class="line"><span class="attr">name</span> = <span class="string">"shadowsocks"</span></span><br><span class="line"><span class="attr">type</span> = <span class="string">"tcp"</span></span><br><span class="line"><span class="attr">localPort</span> = <span class="number">12300</span></span><br><span class="line"><span class="attr">remotePort</span> = <span class="number">12400</span></span><br><span class="line"></span><br><span class="line"><span class="section">[[proxies]]</span></span><br><span class="line"><span class="attr">name</span> = <span class="string">"shadowsocks-udp"</span></span><br><span class="line"><span class="attr">type</span> = <span class="string">"udp"</span></span><br><span class="line"><span class="attr">localPort</span> = <span class="number">12300</span></span><br><span class="line"><span class="attr">remotePort</span> = <span class="number">12400</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>使用 docker 方便管理服务：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name frpc --restart=always --net host -v /docker/config/frpc/frpc.toml:/frp/frpc.toml -d stilleshan/frpc</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这样，我们内网启动了 frpc，它会通过端口 <code>12500</code> 和 token <code>YOURFRPSTOKEN</code> 连接到公网中转服务器 <code>1.2.3.4</code>，告诉公网服务器监听 <code>12400</code> 端口的流量，并将发往这个端口的流量转发至 frpc 所在机器的 <code>12300</code> 端口。前文我们在 <code>12300</code> 端口部署了 <code>shadowsocks</code>，于是流量会经过 <code>shaodowsocks</code> 后进入内网。 </p>
+<h2 id="客户端配置-1"><a href="#客户端配置-1" class="headerlink" title="客户端配置"></a>客户端配置</h2><p>客户端通过指定 IP 规则来实现用内网 IP 访问服务，以 <code>Quantumult X</code> 配置举例：</p>
+<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">[server_local]</span><br><span class="line">shadowsocks=1.2.3.4:12400, method=chacha20-ietf-poly1305, password=lalala, fast-open=false, udp-relay=false, tag=ss</span><br><span class="line"></span><br><span class="line">[filter_local]</span><br><span class="line"># 我的内网网段为 192.168.10.x </span><br><span class="line">ip-cidr, 192.168.10.0/24, ss</span><br><span class="line">ip-cidr, 192.168.0.0/16, direct</span><br></pre></td></tr></tbody></table></figure>
+
+<p>这样，客户端在访问 <code>192.168.10.x</code> 时 <code>Quantumult X</code> 就会将流量路由到 ss 节点，ss-client 将流量加密后发往 <code>1.2.3.4</code> 的 <code>12400</code> 端口，<code>1.2.3.4</code> 的 <code>12400</code> 端口实际是 FRP 映射的 NAS 的 <code>12300</code> 端口，于是流量就被发到内网 ss-server，ss-server 解密流量后访问 <code>192.168.10.x</code>。</p>
+<h2 id="优缺点-2"><a href="#优缺点-2" class="headerlink" title="优缺点"></a>优缺点</h2><p>FRP 方案的优点是不需要公网 IP，任何网络环境都可以部署，缺点是需要一台云服务器用于流量中转，同时该方案的网络带宽也受限于云服务器和家庭网络的上传上限，即 <code>MAX(带宽) = MIN(云服务器上传, 家宽上传)</code>。</p>
+<h1 id="Tailscale"><a href="#Tailscale" class="headerlink" title="Tailscale"></a>Tailscale</h1><p>Tailscale 的使用相较于其他方案非常简单，而且它不需要公网 IP 和云服务器，可谓是最低成本的内网穿透方案，但是由于 Tailscale 客户端会占用 VPN 通道（iOS），导致它无法与 <code>Quantumult X</code> 之类的共存，因此我只是将它作为一个备用的穿透工具。</p>
+<h2 id="注册"><a href="#注册" class="headerlink" title="注册"></a>注册</h2><p>在 <a target="_blank" rel="noopener" href="https://tailscale.com/" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>https://tailscale.com/</a> 注册账号，并转到 <a target="_blank" rel="noopener" href="https://login.tailscale.com/admin/settings/keys" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>https://login.tailscale.com/admin/settings/keys</a> 来生成 <code>auth key</code> 和 <code>access token</code>:</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:2702/1714;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/tailscale-key.png" alt="Tailscale Keys" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="2702" height="1714" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[355.4836,6.1869,97.1279,1]}" data-stellar-image-source="/img/2025/nat-traversal/tailscale-key.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">Tailscale Keys</span></div></div>
+
+<h2 id="NAS-配置"><a href="#NAS-配置" class="headerlink" title="NAS 配置"></a>NAS 配置</h2><p>使用 docker 方便管理服务：</p>
+<figure class="highlight bash"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">mkdir</span> /docker/config/tailscale</span><br><span class="line">docker run --name tailscale --restart=always --net host --cap-add NET_ADMIN -v /docker/config/tailscale:/var/lib -v /docker/config/tailscale:/dev/net/tun -e TS_ROUTES=192.168.10.0/24 -e TS_AUTHKEY=刚申请的AuthKey -e TS_STATE_DIR=/var/lib/tailscale -d tailscale/tailscale</span><br></pre></td></tr></tbody></table></figure>
+
+<p>启动成功后即可在 <a target="_blank" rel="noopener" href="https://login.tailscale.com/admin/machines" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>Tailscale后台</a> 看到机器上线了：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:2326/1284;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/tailscale-machines.png" alt="Tailscale Machines" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="2326" height="1284" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[304.4032,3.0897,96.7958,1]}" data-stellar-image-source="/img/2025/nat-traversal/tailscale-machines.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">Tailscale Machines</span></div></div>
+
+<p>其中 <code>Subnets</code> 旁边的感叹号提示我们在 docker 启动时添加的网段还没有真实生效，接下来我们让它生效：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:2538/1864;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/tailscale-subnet-1.png" alt="Tailscale Subnet Config 1" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="2538" height="1864" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[335.6614,3.2408,96.5786,1]}" data-stellar-image-source="/img/2025/nat-traversal/tailscale-subnet-1.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">Tailscale Subnet Config 1</span></div></div>
+
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:1008/984;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/tailscale-subnet-2.png" alt="Tailscale Subnet Config 2" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1008" height="984" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[4.5104,14.919,95.8935,1]}" data-stellar-image-source="/img/2025/nat-traversal/tailscale-subnet-2.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">Tailscale Subnet Config 2</span></div></div>
+
+<p>这样，当其他设备加入 Tailscale 后就可以通过 <code>192.168.10.x</code> 访问 NAS 以及其他内网设备了。</p>
+<h2 id="客户端配置-2"><a href="#客户端配置-2" class="headerlink" title="客户端配置"></a>客户端配置</h2><p>Tailscale 支持的平台相当广泛，客户端只需要登录账号即可完成配置，开启组网开关即可访问内网设备了。</p>
+<h1 id="狡兔三窟"><a href="#狡兔三窟" class="headerlink" title="狡兔三窟"></a>狡兔三窟</h1><p>分布式系统中常说异地多活、容灾等概念，我们内网穿透也可以四种方案并存，以备不时之需，每种方案的配置细节与原理都写在上边了，任君组合 ~</p>
+<h1 id="我的网络环境"><a href="#我的网络环境" class="headerlink" title="我的网络环境"></a>我的网络环境</h1><p>我所在的地区是可以下发动态公网 IP 的，所以我主要使用 DDNS + IPv4 的形式，不过我也配置了另外几种方案作为备份，以下是我的家庭网络拓扑：</p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:1066/631;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/nat-traversal/my.png" alt="My NAT Traversal" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1066" height="631" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[0.7012,5.207,36.0387,0.3014]}" data-stellar-image-source="/img/2025/nat-traversal/my.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">My NAT Traversal</span></div></div>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文我们介绍了内网穿透的几种方案，在各式各样工具的加持下，内网穿透现在已经不再是一个难题了。不过网络传输的稳定性依然是一个大问题，家宽上传更是万年的 30M，不过技术发展日新月异，这些问题迟早会被解决，期待那一天的到来！</p>
+</article>
+<div class="article-tags slide-up"><a class="tag" href="/tags/NAS/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>NAS</a><a class="tag" href="/tags/DDNS/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>DDNS</a><a class="tag" href="/tags/FRP/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>FRP</a><a class="tag" href="/tags/Tailscale/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>Tailscale</a></div>
+
+
+  <div class="article-share slide-up" id="share">
+    <div class="body">
+      <div class="social-wrap dis-select"><a class="social share-item qrcode ui-interactive is-icon-only" onclick="util.toggle(&quot;share-qrcode&quot;)" aria-label="分享文章: QR Code" title="分享文章: QR Code"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" d="M10.553 13.447c-.424-.424-.95-.596-1.535-.675c-.553-.074-1.25-.074-2.086-.074H5.827c-.58 0-1.065 0-1.459.037c-.411.04-.795.124-1.146.34c-.345.21-.634.5-.845.844c-.216.352-.3.735-.34 1.147C2 15.459 2 15.944 2 16.525v.068c0 .884 0 1.597.055 2.17c.056.592.175 1.108.459 1.571c.288.47.682.864 1.152 1.152c.463.284.979.403 1.57.46C5.81 22 6.524 22 7.407 22h.07c.58 0 1.064 0 1.458-.037c.412-.04.795-.124 1.147-.34c.344-.21.633-.5.844-.844c.216-.352.3-.736.34-1.147c.037-.394.037-.879.037-1.46v-1.104c0-.836 0-1.533-.074-2.086c-.079-.584-.251-1.111-.675-1.535m-1.62-11.41c.412.04.795.124 1.147.34c.344.21.633.5.844.845c.216.351.3.735.34 1.146c.037.394.037.879.037 1.46v1.104c0 .836 0 1.533-.074 2.086c-.079.584-.251 1.111-.675 1.535s-.95.596-1.535.675c-.553.074-1.25.074-2.086.074H5.827c-.58 0-1.065 0-1.459-.037c-.411-.04-.795-.124-1.146-.34a2.56 2.56 0 0 1-.845-.844c-.216-.352-.3-.735-.34-1.147C2 8.54 2 8.056 2 7.475v-.068c0-.884 0-1.597.055-2.17c.056-.592.175-1.108.459-1.571c.288-.47.682-.864 1.152-1.152c.463-.284.979-.403 1.57-.46C5.81 2 6.524 2 7.407 2h.07c.58 0 1.064 0 1.458.037M16.593 2h-.068c-.58 0-1.065 0-1.46.037c-.41.04-.794.124-1.146.34c-.344.21-.633.5-.844.845c-.216.351-.3.735-.34 1.146c-.037.394-.037.879-.037 1.46v1.104c0 .836 0 1.533.074 2.086c.079.584.251 1.111.675 1.535s.95.596 1.535.675c.553.074 1.25.074 2.086.074h1.105c.58 0 1.065 0 1.459-.037c.411-.04.795-.124 1.146-.34c.345-.21.634-.5.845-.844c.216-.352.3-.735.34-1.147C22 8.54 22 8.056 22 7.475v-.068c0-.884 0-1.597-.055-2.17c-.056-.592-.175-1.108-.459-1.571a3.5 3.5 0 0 0-1.152-1.152c-.463-.284-.979-.403-1.57-.46C18.19 2 17.477 2 16.594 2" opacity=".5"></path><path fill="currentColor" d="M14.093 21.302a.698.698 0 1 1-1.396 0v-2.79h1.396z" opacity=".4"></path><path fill="currentColor" d="M21.302 12.698a.7.7 0 0 0-.697.697v3.256H22v-3.256a.7.7 0 0 0-.698-.697" opacity=".5"></path><path fill="currentColor" d="M16.076 16.617c-.076.184-.076.417-.076.883s0 .699.076.883a1 1 0 0 0 .541.54c.184.077.417.077.883.077s.699 0 .883-.076a1 1 0 0 0 .54-.541c.077-.184.077-.417.077-.883s0-.699-.076-.883a1 1 0 0 0-.541-.54C18.199 16 17.966 16 17.5 16s-.699 0-.883.076a1 1 0 0 0-.54.541"></path><path fill="currentColor" d="M22 18.535v-.023h-1.396c0 .443 0 .74-.016.97c-.015.224-.043.333-.073.405a1.16 1.16 0 0 1-.629.63c-.072.029-.18.056-.405.072c-.23.015-.527.016-.97.016h-1.86V22h1.883c.414 0 .759 0 1.042-.02a2.6 2.6 0 0 0 .844-.175a2.56 2.56 0 0 0 1.384-1.384c.112-.27.156-.549.176-.844c.02-.283.02-.628.02-1.042" opacity=".7"></path><path fill="currentColor" d="M12.697 16.616v.035h1.396c0-.668 0-1.116.035-1.458c.034-.33.093-.482.16-.583a1.2 1.2 0 0 1 .321-.32c.101-.068.254-.128.584-.161c.342-.035.79-.036 1.458-.036h1.86v-1.395h-1.896c-.623 0-1.142 0-1.563.043c-.44.044-.85.142-1.218.388c-.28.187-.519.426-.706.706c-.246.368-.343.777-.388 1.217c-.043.421-.043.94-.043 1.564" opacity=".6"></path><path fill="currentColor" d="M5.508 18.69c.219.155.528.155 1.146.155c.619 0 .928 0 1.146-.155a.8.8 0 0 0 .2-.199c.154-.218.154-.527.154-1.146s0-.927-.155-1.146A.8.8 0 0 0 7.8 16c-.218-.155-.527-.155-1.146-.155s-.927 0-1.146.155a.8.8 0 0 0-.199.2c-.155.218-.155.527-.155 1.145c0 .619 0 .928.155 1.146a.8.8 0 0 0 .2.2M6.654 8.155c-.618 0-.927 0-1.146-.155a.8.8 0 0 1-.199-.2c-.155-.217-.155-.527-.155-1.145c0-.619 0-.928.155-1.146a.8.8 0 0 1 .2-.2c.218-.154.527-.154 1.145-.154c.619 0 .928 0 1.146.155a.8.8 0 0 1 .2.199c.154.218.154.527.154 1.146s0 .928-.155 1.146A.8.8 0 0 1 7.8 8c-.218.155-.527.155-1.146.155M16.2 8c.218.155.527.155 1.146.155s.927 0 1.146-.155a.8.8 0 0 0 .199-.199c.155-.218.155-.528.155-1.146c0-.619 0-.928-.155-1.146a.8.8 0 0 0-.2-.2c-.218-.154-.527-.154-1.145-.154c-.619 0-.928 0-1.146.155a.8.8 0 0 0-.2.199c-.154.218-.154.527-.154 1.146s0 .928.155 1.146A.8.8 0 0 0 16.2 8"></path></svg></span></a><a class="social share-item weibo ui-interactive is-icon-only" href="https://service.weibo.com/share/share.php?url=https%3A%2F%2Fblog.akise.app%2Fposts%2Fnat-traversal%2F&amp;title=%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E8%AF%A6%E8%A7%A3%20-%20AA%E5%8D%9A%E5%AE%A2&amp;pics=%2Fimg%2F2025%2Fnat-traversal%2Fcover.png&amp;summary=%E8%AF%A6%E7%BB%86%E6%8F%8F%E8%BF%B0%E5%A4%9A%E7%A7%8D%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E6%96%B9%E6%A1%88%E7%9A%84%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82%EF%BC%8C%E5%8C%85%E6%8B%AC%E5%9F%BA%E4%BA%8E%20Tailscale%20%E7%9A%84%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E3%80%81%E5%9F%BA%E4%BA%8E%20FRP%20%E7%9A%84%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E3%80%81%E5%9F%BA%E4%BA%8E%20DDNS%20%E7%9A%84%E5%85%AC%E7%BD%91%20IPv4%20%E5%92%8C%20IPv6%20%E7%A9%BF%E9%80%8F%E3%80%82" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: Weibo" title="分享文章: Weibo"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.737 5.439l-.002.004zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.861 1.793-.601.622.263.82.972.442 1.592zm1.27-1.627c-.141.237-.449.353-.689.253-.236-.09-.313-.361-.177-.586.138-.227.436-.346.672-.24.239.09.315.36.18.601l.014-.028zm.176-2.719c-1.893-.493-4.033.45-4.857 2.118-.836 1.704-.026 3.591 1.886 4.21 1.983.64 4.318-.341 5.132-2.179.8-1.793-.201-3.642-2.161-4.149zm7.563-1.224c-.346-.105-.57-.18-.405-.615.375-.977.42-1.804 0-2.404-.781-1.112-2.915-1.053-5.364-.03 0 0-.766.331-.571-.271.376-1.217.315-2.224-.27-2.809-1.338-1.337-4.869.045-7.888 3.08C1.309 10.87 0 13.273 0 15.348c0 3.981 5.099 6.395 10.086 6.395 6.536 0 10.888-3.801 10.888-6.82 0-1.822-1.547-2.854-2.915-3.284v.01zm1.908-5.092c-.766-.856-1.908-1.187-2.96-.962-.436.09-.706.511-.616.932.09.42.511.691.932.602.511-.105 1.067.044 1.442.465.376.421.466.977.316 1.473-.136.406.089.856.51.992.405.119.857-.105.992-.512.33-1.021.12-2.178-.646-3.035l.03.045zm2.418-2.195c-1.576-1.757-3.905-2.419-6.054-1.968-.496.104-.812.587-.706 1.081.104.496.586.813 1.082.707 1.532-.331 3.185.15 4.296 1.383 1.112 1.246 1.429 2.943.947 4.416-.165.48.106 1.007.586 1.157.479.165.991-.104 1.157-.586.675-2.088.241-4.478-1.338-6.235l.03.045z"></path></svg></span></a><a class="social share-item x ui-interactive is-icon-only" href="https://x.com/intent/tweet?text=%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E8%AF%A6%E8%A7%A3%20-%20AA%E5%8D%9A%E5%AE%A2&amp;url=https%3A%2F%2Fblog.akise.app%2Fposts%2Fnat-traversal%2F" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: X" title="分享文章: X"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M14.234 10.162L22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299l-.929-1.329L3.076 1.56h3.182l5.965 8.532l.929 1.329l7.754 11.09h-3.182z"></path></svg></span></a><a class="social share-item telegram ui-interactive is-icon-only" href="https://t.me/share/url?url=https%3A%2F%2Fblog.akise.app%2Fposts%2Fnat-traversal%2F&amp;text=%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E8%AF%A6%E8%A7%A3%20-%20AA%E5%8D%9A%E5%AE%A2" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: Telegram" title="分享文章: Telegram"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0zm4.962 7.224c.1-.002.321.023.465.14a.5.5 0 0 1 .171.325c.016.093.036.306.02.472c-.18 1.898-.962 6.502-1.36 8.627c-.168.9-.499 1.201-.82 1.23c-.696.065-1.225-.46-1.9-.902c-1.056-.693-1.653-1.124-2.678-1.8c-1.185-.78-.417-1.21.258-1.91c.177-.184 3.247-2.977 3.307-3.23c.007-.032.014-.15-.056-.212s-.174-.041-.249-.024q-.159.037-5.061 3.345q-.72.495-1.302.48c-.428-.008-1.252-.241-1.865-.44c-.752-.245-1.349-.374-1.297-.789q.04-.324.893-.663q5.247-2.286 6.998-3.014c3.332-1.386 4.025-1.627 4.476-1.635"></path></svg></span></a><a class="social share-item whatsapp ui-interactive is-icon-only" href="https://wa.me/?text=%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E8%AF%A6%E8%A7%A3%20-%20AA%E5%8D%9A%E5%AE%A2%0Ahttps%3A%2F%2Fblog.akise.app%2Fposts%2Fnat-traversal%2F" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: WhatsApp" title="分享文章: WhatsApp"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967c-.273-.099-.471-.148-.67.15c-.197.297-.767.966-.94 1.164c-.173.199-.347.223-.644.075c-.297-.15-1.255-.463-2.39-1.475c-.883-.788-1.48-1.761-1.653-2.059c-.173-.297-.018-.458.13-.606c.134-.133.298-.347.446-.52s.198-.298.298-.497c.099-.198.05-.371-.025-.52s-.669-1.612-.916-2.207c-.242-.579-.487-.5-.669-.51a13 13 0 0 0-.57-.01c-.198 0-.52.074-.792.372c-.272.297-1.04 1.016-1.04 2.479c0 1.462 1.065 2.875 1.213 3.074s2.096 3.2 5.077 4.487c.709.306 1.262.489 1.694.625c.712.227 1.36.195 1.871.118c.571-.085 1.758-.719 2.006-1.413s.248-1.289.173-1.413c-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214l-3.741.982l.998-3.648l-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884c2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.9 11.9 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413"></path></svg></span></a><a class="social share-item email ui-interactive is-icon-only" href="mailto:?subject=%E5%86%85%E7%BD%91%E7%A9%BF%E9%80%8F%E8%AF%A6%E8%A7%A3%20-%20AA%E5%8D%9A%E5%AE%A2&amp;body=https%3A%2F%2Fblog.akise.app%2Fposts%2Fnat-traversal%2F" aria-label="分享文章: Email" title="分享文章: Email"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" fill-rule="evenodd" d="M3.172 5.172C2 6.343 2 8.229 2 12s0 5.657 1.172 6.828C4.343 20 6.229 20 10 20h4c3.771 0 5.657 0 6.828-1.172C22 17.657 22 15.771 22 12s0-5.657-1.172-6.828C19.657 4 17.771 4 14 4h-4C6.229 4 4.343 4 3.172 5.172m15.404 2.348a.75.75 0 0 1-.096 1.056l-2.196 1.83c-.887.739-1.605 1.338-2.24 1.746-.66.424-1.303.693-2.044.693s-1.384-.269-2.045-.693c-.634-.408-1.352-1.007-2.239-1.745L5.52 8.576a.75.75 0 1 1 .96-1.152l2.159 1.799c.933.777 1.58 1.315 2.128 1.667.529.34.888.455 1.233.455s.704-.115 1.233-.455c.547-.352 1.195-.89 2.128-1.667l2.159-1.8a.75.75 0 0 1 1.056.097" clip-rule="evenodd"></path></svg></span></a></div>
+      <div class="share-qrcode" id="share-qrcode" style="opacity:0;height:0"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&amp;data=https%3A%2F%2Fblog.akise.app%2Fposts%2Fnat-traversal%2F" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;"></div>
+    </div>
+  </div>
+
+<div class="article-footer slide-up">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section></div>
+
+<div class="related-wrap slide-up" id="read-next"><section class="body"><div class="item" id="prev"><div class="note"><svg class="icon" viewBox="0 0 1 1" data-icon="default:arrow-left" aria-hidden="true"></svg> 较新文章</div><a href="/posts/nas/">我在 NAS 上都部署了什么服务</a></div><div class="item" id="next"><div class="note">较早文章 <svg class="icon" viewBox="0 0 1 1" data-icon="default:arrow-right" aria-hidden="true"></svg></div><a href="/posts/alfred-accurate-calculator/">Alfred 精确计算器</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text slide-up" id="comments">
+    
+    
+    <section class="header cmt-title cap theme">
+      <p>Take it easy to comment or discuss / 欢迎评论或讨论</p>
+
+    </section>
+    
+    <section class="body cmt-body giscus">
+      
+
+<div class="lazy-icon"></div>
+
+<div id="giscus" data-repo="akiakise/blog.akise.app" data-repo-id="R_kgDOLkT3kg" data-category="Announcements" data-category-id="DIC_kwDOLkT3ks4CeK_U" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" crossorigin="anonymous"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer slide-up footnote"><hr><div class="text"><p><span id="blog_history">© 2017 - 2026 ♥ <a href="https://github.com/xaoxuu/hexo-theme-stellar" target="_blank">Stellar</a></span></p>
+<p>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+</main>
+<aside data-stellar-runtime-region="" id="rightbar-region" class="site-region site-region--rightbar" data-region="rightbar" aria-label="Rightbar"><div class="site-region__surface ui-drawer-surface"><div class="site-region__viewport"><div class="widgets widget-stack widget-stack--rightbar widget-stack--rightbar"><div class="widget-instance widget-instance--toc" data-widget-id="rightbar:1:toc" data-presentation="rightbar">
+
+
+<widget class="widget-wrapper slide-up toc" id="data-toc" collapse="false">
+  
+    <div class="widget-header dis-select">
+      <span class="name">本文目录</span>
+      <button type="button" class="cap-action ui-interactive card-hover card-hover--spotlight" data-shell-action="toggle-toc" aria-label="Toggle table of contents" aria-pressed="false"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg></span></button>
+    </div>
+  
+  <div class="widget-body"><ol class="toc ui-collection-adapter"><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E5%86%85%E7%BD%91%E9%97%A8%E9%94%81"><span class="toc-text">内网门锁</span></a></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#DDNS-IPv4"><span class="toc-text">DDNS + IPv4</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#ss-server-%E9%85%8D%E7%BD%AE"><span class="toc-text">ss-server 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#DDNS-%E8%84%9A%E6%9C%AC"><span class="toc-text">DDNS 脚本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E7%AB%AF%E5%8F%A3%E8%BD%AC%E5%8F%91"><span class="toc-text">端口转发</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#ss-client-%E9%85%8D%E7%BD%AE"><span class="toc-text">ss-client 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="toc-text">优缺点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#DDNS-IPv6"><span class="toc-text">DDNS + IPv6</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#ss-server-%E9%85%8D%E7%BD%AE-1"><span class="toc-text">ss-server 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#DDNS-%E8%84%9A%E6%9C%AC-1"><span class="toc-text">DDNS 脚本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E9%98%B2%E7%81%AB%E5%A2%99%E6%94%BE%E8%A1%8C%E9%85%8D%E7%BD%AE"><span class="toc-text">防火墙放行配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%85%8D%E7%BD%AE"><span class="toc-text">客户端配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E4%BC%98%E7%BC%BA%E7%82%B9-1"><span class="toc-text">优缺点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#FRP"><span class="toc-text">FRP</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#ss-server-%E9%85%8D%E7%BD%AE-2"><span class="toc-text">ss-server 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#frps-%E9%85%8D%E7%BD%AE"><span class="toc-text">frps 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#frpc-%E9%85%8D%E7%BD%AE"><span class="toc-text">frpc 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%85%8D%E7%BD%AE-1"><span class="toc-text">客户端配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E4%BC%98%E7%BC%BA%E7%82%B9-2"><span class="toc-text">优缺点</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#Tailscale"><span class="toc-text">Tailscale</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E6%B3%A8%E5%86%8C"><span class="toc-text">注册</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#NAS-%E9%85%8D%E7%BD%AE"><span class="toc-text">NAS 配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%85%8D%E7%BD%AE-2"><span class="toc-text">客户端配置</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E7%8B%A1%E5%85%94%E4%B8%89%E7%AA%9F"><span class="toc-text">狡兔三窟</span></a></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E6%88%91%E7%9A%84%E7%BD%91%E7%BB%9C%E7%8E%AF%E5%A2%83"><span class="toc-text">我的网络环境</span></a></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div>
+  <div class="widget-footer"><a class="top ui-interactive" onclick="util.scrollTop()"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" d="M20.536 3.464C22 4.93 22 7.286 22 12s0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12s0-7.071 1.464-8.536C4.93 2 7.286 2 12 2s7.071 0 8.535 1.464" opacity=".5"></path><path fill="currentColor" d="M9.53 12.03a.75.75 0 0 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06L12 9.56z"></path><path fill="currentColor" d="M9.53 16.03a.75.75 0 0 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06L12 13.56z"></path></svg></span><span>回到顶部</span></a><a class="buttom ui-interactive" onclick="util.scrollComment()"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"></path><path fill="currentColor" d="M7.25 9A.75.75 0 0 1 8 8.25h8a.75.75 0 0 1 0 1.5H8A.75.75 0 0 1 7.25 9m0 3.5a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1-.75-.75"></path></svg></span><span>参与讨论</span></a></div>
+</widget>
+
+
+</div></div></div></div></aside>
+</div><button type="button" class="site-scrim" data-shell-action="dismiss-drawer" aria-label="Close navigation" tabindex="-1"></button><div data-stellar-runtime-region="" class="site-dock" role="group" aria-label="Layout panels">
+  <button type="button" class="site-dock__button site-dock__button--rightbar ui-interactive" aria-label="Open rightbar" aria-controls="rightbar-region" aria-expanded="false" data-shell-action="toggle-rightbar-drawer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
+  </button>
+  <button type="button" class="site-dock__button site-dock__button--leftbar ui-interactive" aria-label="Open leftbar" aria-controls="leftbar-region" aria-expanded="false" data-shell-action="toggle-leftbar-drawer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"></path><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"></path></g></svg>
+  </button>
+</div>
+
+<dialog data-stellar-runtime-region="" class="search-dialog" id="site-search-dialog" aria-labelledby="site-search-title">
+  <div class="search-dialog__panel search-wrapper" id="site-search-wrapper" searching="false">
+    <div class="search-dialog__header">
+      <div class="search-form" role="search">
+        <span class="search-button" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Adapted from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3M3 13h3M3 18h8M16.83 13.83l3.76 3.76"></path><circle cx="14" cy="11" r="4"></circle></g></svg></span>
+        <input type="search" class="search-input" id="site-search-input" aria-labelledby="site-search-title" placeholder="搜索">
+      </div>
+      <button type="button" class="search-dialog__close" data-shell-action="close-search" aria-label="关闭搜索">×</button>
+    </div>
+    
+      <div class="search-dialog__scope" role="radiogroup" aria-labelledby="site-search-title" hidden="">
+        <label class="search-dialog__scope-option" data-search-scope-option="all">
+          <input class="ui-radio" type="radio" name="site-search-scope" value="all">
+          <span>全站</span>
+        </label>
+        <label class="search-dialog__scope-option" data-search-scope-option="blog" hidden="">
+          <input class="ui-radio" type="radio" name="site-search-scope" value="blog">
+          <span>博客</span>
+        </label>
+        <label class="search-dialog__scope-option" data-search-scope-option="current" hidden="">
+          <input class="ui-radio" type="radio" name="site-search-scope" value="current">
+          <span data-search-scope-current-label=""></span>
+        </label>
+      </div>
+    
+    <h2 class="search-dialog__title" id="site-search-title">站内搜索</h2>
+    <div class="search-result" id="site-search-result"></div>
+    <div class="search-no-result">没有找到内容！</div>
+  </div>
+</dialog>
+</div><div class="site-scripts">
+<script data-stellar-script="core" src="/js/stellar-icons.js?v=39c6ac17e854ffe2"></script>
+
+<script data-stellar-script="defines">
+  window.canonical = window.stellarClientData.canonical;
+  const ctx = window.stellarClientData.ctx;
+  window.canonical.param = {permalink: "https://blog.akise.app/posts/nat-traversal/", checklink: ctx.services.video.js};
+  ctx.date_suffix = {"just":"刚刚","min":"分钟前","hour":"小时前","day":"天前"};
+  if (ctx.search) Object.assign(ctx.search, {"more":"更多","no_more":"没有更多了"});
+  const def = window.stellarClientData.def;
+  window.ctx = ctx;
+  window.def = def;
+</script>
+
+
+<!-- core: 迁移期 DOM/资源兼容工具；Extension 注册与生命周期由 ESM runtime 所有 -->
+<script data-stellar-script="core" src="/js/utils.js?v=2.0.0"></script>
+<script data-stellar-script="core" src="/js/main.js?v=2.0.0" defer=""></script>
+<script data-stellar-script="core" defer="" src="/js/profile.js?v=2.0.0"></script>
+
+
+
+
+
+<script data-stellar-script="core" type="application/json" id="stellar-runtime-config">{"version":1,"root":"/","policy":{"cache":{"enabled":true,"defaultTtl":3600,"ttl":{"giscus":600,"waline":600,"artalk":600,"memos":600,"memos-user":86400,"sites":86400,"friends":86400,"friends_and_posts":86400,"siteinfo":86400},"maxEntries":200},"request":{"retries":2,"timeoutMs":5000,"idleTimeoutMs":3000,"maxCacheEntryBytes":204800},"features":{"codeCopyToastMs":2500},"providers":{"linkPrefetch":"flying_pages","lightbox":"fancybox","diagrams":"mermaid"}},"extensions":[{"id":"pin-slider","module":"/js/runtime/extensions/pin-slider.js","scope":"region","when":{"selector":".pin-slider"},"config":{}},{"id":"page-controls","module":"/js/runtime/extensions/page-controls.js","scope":"region","when":{"always":true},"config":{"highlight":"/js/search/highlight.js","tagtree":"/js/tagtree.js"}},{"id":"partial-navigation","module":"/js/runtime/extensions/partial-navigation.js","scope":"document","when":{"always":true},"config":{}},{"id":"color-scheme-switch","module":"/js/runtime/extensions/color-scheme-switch.js","scope":"document","when":{"always":true},"config":{"messages":{"light":"切换到浅色模式","dark":"切换到深色模式","auto":"切换到跟随系统配色"}}},{"id":"search","module":"/js/runtime/extensions/search.js","scope":"document","when":{"selector":".search-input"},"config":{"provider":"local","options":{"scope":"all","includeContent":true,"cacheTtlSeconds":86400},"assets":{"client":null,"provider":"/js/search/local-search.js","shortcut":"/js/search/shortcut.js"}}},{"id":"hero-parallax","module":"/js/runtime/extensions/hero-parallax.js","scope":"region","when":{"selector":".wiki-hero"},"config":{}},{"id":"hero-effect","module":"/js/runtime/extensions/hero-effect.js","scope":"region","when":{"selector":"canvas[data-hero-effect]"},"config":{}},{"id":"lazy-loading","module":"/js/runtime/extensions/lazy-loading.js","scope":"document","when":{"always":true},"config":{"asset":"https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"}},{"id":"deferred-icons","module":"/js/runtime/extensions/deferred-icons.js","scope":"region","when":{"selector":"svg.icon[data-icon]"},"config":{}},{"id":"dropdown","module":"/js/runtime/extensions/dropdown.js","scope":"region","when":{"selector":"details.dropdown"},"config":{}},{"id":"services","module":"/js/runtime/extensions/services.js","scope":"region","when":{"selector":"#artalk_container, #twikoo_container, #waline_container, .data-service, [class*='ds-'], a[cardlink], a[data-md-link][data-siteinfo-api], .site-card [data-siteinfo-api], .voice\u003eaudio, .video\u003evideo, .chat-file"},"config":{"marked":"https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js"}},{"id":"comments","module":"/js/runtime/extensions/comments.js","scope":"region","when":{"selector":"#comments"},"config":{"provider":"giscus","options":{"data-repo":"akiakise/blog.akise.app","data-repo-id":"R_kgDOLkT3kg","data-category":"Announcements","data-category-id":"DIC_kwDOLkT3ks4CeK_U","data-mapping":"pathname","data-strict":0,"data-reactions-enabled":1,"data-emit-metadata":0,"data-input-position":"top","data-theme":"preferred_color_scheme","data-lang":"zh-CN","data-loading":null,"crossorigin":"anonymous"},"pageTitle":"内网穿透详解","assets":{"js":"https://giscus.app/client.js"}}},{"id":"settings","module":"/js/runtime/extensions/settings.js","scope":"region","when":{"selector":".settings-page"},"config":{}},{"id":"link-prefetch","module":"/js/runtime/extensions/link-prefetch.js","scope":"document","when":{"always":true},"config":{"asset":"https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"}},{"id":"lightbox","module":"/js/runtime/extensions/lightbox.js","scope":"region","when":{"selector":"[data-fancybox]:not(.error), .with-fancybox, .ds-memos, .timenode p\u003eimg"},"config":{"enabled":true,"selector":".timenode p\u003eimg","assets":{"localCss":"/css/plugins/fancybox.css","js":"https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js","css":"https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"}}},{"id":"reveal","module":"/js/runtime/extensions/reveal.js","scope":"region","when":{"selector":".slide-up"},"config":{"enabled":true,"duration":800,"interval":200,"distance":8,"blur":4}},{"id":"diagrams","module":"/js/runtime/extensions/diagrams.js","scope":"region","when":{"selector":".mermaid"},"config":{"theme":"neutral","provider":"mermaid","assets":{"js":"https://gcore.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"},"colorScheme":"auto"}},{"id":"code-copy","module":"/js/runtime/extensions/code-copy.js","scope":"region","when":{"selector":".code"},"config":{"assets":{"js":"/js/plugins/copycode.js"},"messages":{"label":"复制","copied":"复制成功","denied":"未获得剪贴板权限","unsupported":"当前浏览器不支持剪贴板或页面不是 HTTPS"}}},{"id":"adaptive-text","module":"/js/runtime/extensions/adaptive-text.js","scope":"region","when":{"selector":"[data-text-adaptive]"},"config":{"assets":{"colorJs":"/js/color.js","js":"/js/plugins/adaptive-text.js"}}},{"id":"swiper","module":"/js/runtime/extensions/swiper.js","scope":"region","when":{"selector":"#swiper-api"},"config":{"assets":{"localCss":"/css/plugins/swiper.css","js":"https://unpkg.com/swiper@10.3/swiper-bundle.min.js","css":"https://unpkg.com/swiper@10.3/swiper-bundle.min.css"}}}]}</script>
+<script data-stellar-script="core" type="module" src="/js/runtime/index.js?v=2.0.0&amp;runtime=1"></script>
+
+
+<!-- inject -->
+<script>
+  (function () {
+    var el = document.getElementById('blog_history');
+    if (!el) return;
+    el.innerHTML = '© 2017 - ' + new Date().getFullYear() +
+      ' ♥ <a href="https://github.com/xaoxuu/hexo-theme-stellar" target="_blank">Stellar</a>';
+  })();
+</script>
+
+
+<script data-stellar-script="core" defer="" src="/js/navigation-init.js?v=2.0.0"></script>
+</div>
+
+</body></html>

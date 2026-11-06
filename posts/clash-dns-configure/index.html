@@ -1,0 +1,454 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+  
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/2.0.0" theme-name="Stellar" theme-version="2.0.0">
+  
+  
+  <meta name="generator" content="Hexo 8.1.2">
+  <meta http-equiv="x-dns-prefetch-control" content="on">
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  <title data-stellar-page-meta="">Clash.Meta DNS 配置指南 - AA博客</title>
+  <script data-stellar-script="core">
+    (function () {
+      var key = 'stellar:v2:leftbar-state';
+      var fallback = "expanded";
+      try {
+        var value = localStorage.getItem(key);
+        document.documentElement.dataset.leftbarState = value === 'collapsed' || value === 'expanded' ? value : fallback;
+      } catch (error) {
+        document.documentElement.dataset.leftbarState = fallback;
+      }
+    })();
+  </script>
+
+  <meta name="description" content="Clash DNS 配置指南，详细描述 Clash 中 DNS 解析流程与推荐配置" data-stellar-page-meta="">
+<meta property="og:type" content="article" data-stellar-page-meta="">
+<meta property="og:title" content="Clash.Meta DNS 配置指南" data-stellar-page-meta="">
+<meta property="og:url" content="https://blog.akise.app/posts/clash-dns-configure/" data-stellar-page-meta="">
+<meta property="og:site_name" content="AA博客" data-stellar-page-meta="">
+<meta property="og:description" content="Clash DNS 配置指南，详细描述 Clash 中 DNS 解析流程与推荐配置" data-stellar-page-meta="">
+<meta property="og:locale" content="zh_CN" data-stellar-page-meta="">
+<meta property="og:image" content="https://blog.akise.app/img/2025/clash-dns-configure/cover.png" data-stellar-page-meta="">
+<meta property="article:author" content="Aki Akise" data-stellar-page-meta="">
+<meta property="article:published_time" content="2025-02-23T03:49:12.000Z" data-stellar-page-meta="">
+<meta property="article:modified_time" content="2026-11-06T10:48:31.000Z" data-stellar-page-meta="">
+<meta property="article:tag" content="Clash.Meta" data-stellar-page-meta="">
+<meta property="article:tag" content="DNS" data-stellar-page-meta="">
+<meta property="article:tag" content="Mihomo" data-stellar-page-meta="">
+<meta name="twitter:card" content="summary_large_image" data-stellar-page-meta="">
+<meta name="twitter:image" content="https://blog.akise.app/img/2025/clash-dns-configure/cover.png" data-stellar-page-meta=""><meta name="twitter:title" content="Clash.Meta DNS 配置指南" data-stellar-page-meta="">
+  
+  
+  <meta name="keywords" content="Clash.Meta,Mihomo,DNS" data-stellar-page-meta="">
+
+  <!-- feed -->
+  
+    
+
+    
+      
+        <link rel="alternate" href="/atom.xml" title="AA博客" type="application/atom+xml">
+      
+    
+  
+
+  <link rel="preload" href="/css/main.css?v=2.0.0" as="style">
+  <link rel="stylesheet" href="/css/main.css?v=2.0.0">
+  <style>:root{--text-loading:"正在加载";--text-loading-error:"加载失败，请稍后重试。"}</style>
+
+
+  
+    <link rel="shortcut icon" href="/img/favicons/favicon.ico">
+  
+
+  
+
+  <script type="application/ld+json" data-stellar-page-meta="">{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Aki Akise","sameAs":[],"image":"https://blog.akise.app/img/website/avatar.jpg"},"dateCreated":"2025-02-23T11:49:12+08:00","dateModified":"2026-11-06T18:48:31+08:00","datePublished":"2025-02-23T11:49:12+08:00","description":"随着互联网技术的发展与广告联盟的互联互通，大家对隐私的重视程度也越来越高，而 DNS 作为网络基础设施，其泄露的风险与泄露后导致的问题影响也越来越大。泄露可能涉及的问题主要有：用户通过虚拟专用网络或网络代理请求的域名被记录或审查、用户浏览历史被记录和分析用于广告投放或数据挖掘。同时 ISP 的 DNS 也天生自带污染和和劫持，并不推荐使用。\nA DNS leak is a security ...","headline":"Clash.Meta DNS 配置指南","mainEntityOfPage":{"@type":"WebPage","@id":"https://blog.akise.app/posts/clash-dns-configure/"},"publisher":{"@type":"Organization","name":"Aki Akise","sameAs":[],"image":"https://blog.akise.app/img/website/avatar.jpg","logo":{"@type":"ImageObject","url":"https://blog.akise.app/img/website/avatar.jpg"}},"url":"https://blog.akise.app/posts/clash-dns-configure/","image":["/img/2025/clash-dns-configure/cover.png"],"keywords":"Clash.Meta, Mihomo, DNS","thumbnailUrl":"/img/2025/clash-dns-configure/cover.png"}</script>
+  
+
+  <link rel="stylesheet" href="/css/stellar-icons.css?v=7c185ad1a9a79674">
+  <link rel="preload" as="script" href="/js/stellar-icons.js?v=39c6ac17e854ffe2">
+  
+  
+</head>
+<body data-page-type="content" data-page-layout="post" data-article-style="tech"><div data-stellar-runtime-region="" id="site-cover" class="site-cover"></div><div class="site-shell" id="start" data-regions="leftbar rightbar"><div class="site-workspace">
+<aside data-stellar-runtime-region="" id="leftbar-region" class="site-region site-region--leftbar" data-region="leftbar" aria-label="Leftbar"><div class="site-region__surface ui-surface"><div class="site-region__decoration" aria-hidden="true"></div><div class="site-region__viewport"><header class="site-region__header site-region__zone site-region__zone--top">
+    <div class="widget-instance widget-instance--brand" data-widget-id="leftbar:fixed:brand" data-presentation="leftbar" data-leftbar-rail="">
+<header class="brand-header brand-header--regular brand-header--site"><div class="brand-wrap"><a class="brand-image brand-image--avatar" href="/"><img no-lazy="" src="/img/website/avatar.jpg" alt="" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;"></a><a class="brand-title" href="/"><div class="brand-name">AA博客</div><div class="brand-tagline cap">Keep Calm and Carry On</div></a></div><div class="brand-search">
+
+<div class="ui-collection" data-layout="list" data-variant="nav" data-density="auto">
+  
+    
+<button class="ui-collection__item ui-interactive card-hover card-hover--spotlight search-trigger has-hover-surface" type="button" title="搜索" aria-label="搜索" data-shell-action="open-search" data-search-instance="leftbar-brand-search" data-search-domain="topic:play" data-search-domain-label="Playground" data-search-domain-blog="true">
+  
+  <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Adapted from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3M3 13h3M3 18h8M16.83 13.83l3.76 3.76"></path><circle cx="14" cy="11" r="4"></circle></g></svg></span>
+  
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">搜索</span>
+      
+      
+    </span>
+  
+  <kbd class="search-shortcut" aria-hidden="true">⌘K</kbd>
+
+  
+</button>
+
+  
+</div>
+
+
+</div></header>
+</div>
+  </header>
+  <div class="site-region__body site-region__zone site-region__zone--body">
+    <div class="widget-instance widget-instance--menu" data-widget-id="leftbar:fixed:menu" data-presentation="leftbar" data-leftbar-rail="">
+
+
+<nav class="menu dis-select">
+<div class="ui-collection" data-layout="list" data-variant="nav" data-density="auto">
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight is-active is-themed" href="/" title="博客" aria-current="page" style="--item-theme:#1BCDFC;">
+  
+  <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"></path><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"></path></svg></span>
+  
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">博客</span>
+      
+      
+    </span>
+  
+  
+  <span class="ui-collection__indicator"></span>
+</a>
+
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight is-themed" href="/friends/" title="社交" style="--item-theme:#F44336;">
+  
+  <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"></path><path fill="currentColor" d="M10.99 14.308c-1.327-.978-3.49-2.84-3.49-4.593c0-2.677 2.475-3.677 4.5-1.609c2.025-2.068 4.5-1.068 4.5 1.609c0 1.752-2.163 3.615-3.49 4.593c-.454.335-.681.502-1.01.502c-.329 0-.556-.167-1.01-.502"></path></svg></span>
+  
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">社交</span>
+      
+      
+    </span>
+  
+  
+  
+</a>
+
+  
+</div>
+
+</nav>
+
+</div>
+    <div class="widgets widget-stack widget-stack--leftbar widget-stack--body"><div class="widget-instance widget-instance--related" data-widget-id="leftbar:0:related" data-presentation="leftbar" data-leftbar-rail="">
+
+<widget class="widget-wrapper related-widget">
+  
+    <div class="widget-header dis-select">
+      <span class="name">专栏：Playground</span>
+      
+    </div>
+  
+  <div class="widget-body"><div class="ui-collection" data-layout="list" data-variant="nav" data-density="compact">
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight" href="/posts/cloudflare-redirect-invalid-url/" title="利用 Cloudflare 重定向规则自动处理非法 URL">
+  
+  
+  <span class="ui-collection__initial" aria-hidden="true">利</span>
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">利用 Cloudflare 重定向规则自动处理非法 URL</span>
+      
+      
+    </span>
+  
+  
+  
+</a>
+
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight is-active" href="/posts/clash-dns-configure/" title="Clash.Meta DNS 配置指南" aria-current="page">
+  
+  
+  <span class="ui-collection__initial" aria-hidden="true">C</span>
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">Clash.Meta DNS 配置指南</span>
+      
+      
+    </span>
+  
+  
+  <span class="ui-collection__indicator"></span>
+</a>
+
+  
+    
+<a class="ui-collection__item ui-interactive card-hover card-hover--spotlight" href="/posts/cloudflare-redirect-rule/" title="利用 Cloudflare 重定向规则摆脱端口访问服务">
+  
+  
+  <span class="ui-collection__initial" aria-hidden="true">利</span>
+  
+    <span class="ui-collection__content">
+      
+      <span class="ui-collection__title">利用 Cloudflare 重定向规则摆脱端口访问服务</span>
+      
+      
+    </span>
+  
+  
+  
+</a>
+
+  
+</div></div>
+  
+</widget>
+
+
+</div></div>
+  </div>
+  <footer class="site-region__footer">
+    <div class="site-region__footer-actions"><div class="widget-instance widget-instance--actions" data-widget-id="leftbar:fixed:actions" data-presentation="leftbar">
+<div class="region-actions social-wrap ui-collection" data-layout="inline" data-variant="nav" data-density="compact"><a class="social ui-collection__item ui-interactive card-hover card-hover--spotlight is-icon-only" title="GitHub" href="https://github.com/akiakise" target="_blank" rel="external nofollow noopener noreferrer"><span class="ui-icon"><img no-lazy="" src="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/social/08a41b181ce68.svg" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;"></span></a>
+<details class="dropdown social-dropdown"><summary class="dropdown-trigger ui-interactive social ui-collection__item card-hover card-hover--spotlight is-icon-only" title="配色" aria-label="配色"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><g fill="currentColor"><path d="M19.9001 2.30719C19.7392 1.8976 19.1616 1.8976 19.0007 2.30719L18.5703 3.40247C18.5212 3.52752 18.4226 3.62651 18.298 3.67583L17.2067 4.1078C16.7986 4.26934 16.7986 4.849 17.2067 5.01054L18.298 5.44252C18.4226 5.49184 18.5212 5.59082 18.5703 5.71587L19.0007 6.81115C19.1616 7.22074 19.7392 7.22074 19.9001 6.81116L20.3305 5.71587C20.3796 5.59082 20.4782 5.49184 20.6028 5.44252L21.6941 5.01054C22.1022 4.849 22.1022 4.26934 21.6941 4.1078L20.6028 3.67583C20.4782 3.62651 20.3796 3.52752 20.3305 3.40247L19.9001 2.30719Z"></path><path d="M16.0328 8.12967C15.8718 7.72009 15.2943 7.72009 15.1333 8.12967L14.9764 8.52902C14.9273 8.65407 14.8287 8.75305 14.7041 8.80237L14.3062 8.95987C13.8981 9.12141 13.8981 9.70107 14.3062 9.86261L14.7041 10.0201C14.8287 10.0694 14.9273 10.1684 14.9764 10.2935L15.1333 10.6928C15.2943 11.1024 15.8718 11.1024 16.0328 10.6928L16.1897 10.2935C16.2388 10.1684 16.3374 10.0694 16.462 10.0201L16.8599 9.86261C17.268 9.70107 17.268 9.12141 16.8599 8.95987L16.462 8.80237C16.3374 8.75305 16.2388 8.65407 16.1897 8.52902L16.0328 8.12967Z"></path><path d="M12 22C17.5228 22 22 17.5228 22 12C22 11.5373 21.3065 11.4608 21.0672 11.8568C19.9289 13.7406 17.8615 15 15.5 15C11.9101 15 9 12.0899 9 8.5C9 6.13845 10.2594 4.07105 12.1432 2.93276C12.5392 2.69347 12.4627 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" opacity=".5"></path></g></svg></span></summary><div class="dropdown-menu ui-collection" data-layout="list" data-variant="nav" data-density="compact"><button type="button" class="dropdown-item ui-collection__item ui-interactive card-hover card-hover--spotlight" onclick="setColorScheme('light')"><span class="ui-collection__content"><span class="ui-collection__title">浅色</span></span></button><button type="button" class="dropdown-item ui-collection__item ui-interactive card-hover card-hover--spotlight" onclick="setColorScheme('dark')"><span class="ui-collection__content"><span class="ui-collection__title">深色</span></span></button><button type="button" class="dropdown-item ui-collection__item ui-interactive card-hover card-hover--spotlight" onclick="setColorScheme('auto')"><span class="ui-collection__content"><span class="ui-collection__title">跟随系统</span></span></button></div></details>
+</div>
+</div></div>
+    <div class="site-region__system ui-collection" data-layout="inline" data-variant="nav" data-density="compact">
+      <div class="site-region__settings"><div class="widget-instance widget-instance--settings" data-widget-id="leftbar:fixed:settings" data-presentation="leftbar" data-leftbar-rail="">
+<a class="settings-widget ui-collection__item ui-interactive card-hover card-hover--spotlight" href="/settings/" data-profile-provider="giscus" data-profile-identity-enabled="false" data-profile-fallback-avatar="https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg" data-settings-placement="leftbar" data-settings-label="设置" aria-label="设置" title="设置">
+  <span class="settings-widget__avatar" aria-hidden="true">
+    <span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><path fill-rule="evenodd" d="M12.4277 2C11.3139 2 10.2995 2.6007 8.27081 3.80211L7.58466 4.20846C5.55594 5.40987 4.54158 6.01057 3.98466 7C3.42773 7.98943 3.42773 9.19084 3.42773 11.5937V12.4063C3.42773 14.8092 3.42773 16.0106 3.98466 17C4.54158 17.9894 5.55594 18.5901 7.58466 19.7915L8.27081 20.1979C10.2995 21.3993 11.3139 22 12.4277 22C13.5416 22 14.5559 21.3993 16.5847 20.1979L17.2708 19.7915C19.2995 18.5901 20.3139 17.9894 20.8708 17C21.4277 16.0106 21.4277 14.8092 21.4277 12.4063V11.5937C21.4277 9.19084 21.4277 7.98943 20.8708 7C20.3139 6.01057 19.2995 5.40987 17.2708 4.20846L16.5847 3.80211C14.5559 2.6007 13.5416 2 12.4277 2Z" clip-rule="evenodd" opacity=".5"></path><path d="M12.4277 8.25C10.3567 8.25 8.67773 9.92893 8.67773 12C8.67773 14.0711 10.3567 15.75 12.4277 15.75C14.4988 15.75 16.1777 14.0711 16.1777 12C16.1777 9.92893 14.4988 8.25 12.4277 8.25Z"></path></g></svg></span>
+  </span>
+  <span class="settings-widget__name ui-collection__title">设置</span>
+</a>
+</div></div>
+      <button type="button" class="leftbar-state-toggle ui-collection__item ui-interactive card-hover card-hover--spotlight is-icon-only" aria-label="Collapse leftbar" aria-expanded="true" data-shell-action="toggle-leftbar"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M3.172 4.172C2 5.343 2 7.229 2 11v2c0 3.771 0 5.657 1.172 6.828S6.229 21 10 21h5V3h-5C6.229 3 4.343 3 3.172 4.172" clip-rule="evenodd" opacity=".5"></path><path fill="currentColor" d="M5.5 9.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zm1 4a.75.75 0 0 0 0 1.5h4a.75.75 0 0 0 0-1.5zM22 13v-2c0-3.771 0-5.657-1.172-6.828c-.974-.975-3.192-1.139-5.828-1.166v17.988c2.636-.027 4.854-.191 5.828-1.166C22 18.657 22 16.771 22 13"></path></svg></span></button>
+    </div>
+  </footer></div></div></aside>
+<main data-stellar-runtime-region="" class="site-main" id="main">
+
+
+<div class="article-banner-wrap slide-up"><div class="article banner top" style="--bg-url:url('/img/2025/clash-dns-configure/cover.png')"><img class="lazy bg" data-src="/img/2025/clash-dns-configure/cover.png" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1187" height="1519" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[215.4341,32.4487,97.7096,1]}" data-stellar-image-source="/img/2025/clash-dns-configure/cover.png">
+  <div class="content" data-text-adaptive="split">
+    <div class="banner-mask banner-mask-top" aria-hidden="true"></div><div class="banner-mask banner-mask-bottom" aria-hidden="true"></div>
+    <div class="top bread-nav footnote"><div class="top-row"><div class="left" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" id="menu" href="/topic/">专栏</a><span class="sep"></span><a class="cap breadcrumb" id="proj" href="/posts/cloudflare-redirect-invalid-url/">Playground</a>
+</div></div><div class="meta-row">
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2025-02-23T03:49:12.000Z">2025-02-23</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2026-11-06T10:48:31.000Z">2026-11-06</time></span></div>
+</div></div>
+    
+    <div class="bottom only-title">
+      
+      <div class="text-area">
+        <h1 class="text title"><span>Clash.Meta DNS 配置指南</span></h1>
+        
+      </div>
+    </div>
+    
+  </div>
+  </div></div>
+<article class="md-text content slide-up"><p>随着互联网技术的发展与广告联盟的互联互通，大家对隐私的重视程度也越来越高，而 DNS 作为网络基础设施，其<mark class="tag-plugin colorful mark" color="error">泄露</mark>的风险与泄露后导致的问题影响也越来越大。泄露可能涉及的问题主要有：用户通过虚拟专用网络或网络代理请求的域名被记录或审查、用户浏览历史被记录和分析用于广告投放或数据挖掘。同时 ISP 的 DNS 也天生自带污染和和劫持，并不推荐使用。</p>
+<div class="tag-plugin quot p"><p class="content"><svg class="icon" viewBox="0 0 1 1" data-icon="quot:quote-left" aria-hidden="true"></svg><span class="text">A DNS leak is a security flaw that allows DNS requests to be revealed to ISP DNS servers, despite the use of a VPN service to attempt to conceal them. Although primarily of concern to VPN users, it is also possible to prevent it for proxy and direct internet users.</span><svg class="icon" viewBox="0 0 1 1" data-icon="quot:quote-right" aria-hidden="true"></svg></p></div>
+
+<p><a target="_blank" rel="noopener" href="https://wiki.metacubex.one/" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>虚空终端</a>作为开源项目<a target="_blank" rel="noopener" href="https://yuanshen.com/" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>原神</a>的二次开发版本，提供了更强的 DNS 处理能力，通过简单且合理的配置，可以尽最大可能规避 DNS 污染、劫持、泄露问题（不能做 100% 保证，毕竟不清楚还有没有未知的手段）。</p>
+<h1 id="DNS-解析流程"><a href="#DNS-解析流程" class="headerlink" title="DNS 解析流程"></a>DNS 解析流程</h1><p>下图来自虚空终端 wiki: <a target="_blank" rel="noopener" href="https://wiki.metacubex.one/config/dns/diagram/" data-md-link=""><span class="md-link-icon ui-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="currentColor"><g opacity=".5"><path d="M19.7388 4.26118C17.0572 1.57961 12.7095 1.57961 10.0279 4.26118L9.30707 4.98203C9.01418 5.27492 9.01418 5.7498 9.30707 6.04269C9.59997 6.33558 10.0748 6.33558 10.3677 6.04269L11.0886 5.32184C13.1844 3.22605 16.5823 3.22605 18.6781 5.32184C20.7739 7.41763 20.7739 10.8156 18.6781 12.9114L17.9573 13.6322C17.6644 13.9251 17.6644 14.4 17.9573 14.6929C18.2502 14.9858 18.725 14.9858 19.0179 14.6929L19.7388 13.972C22.4203 11.2905 22.4203 6.94276 19.7388 4.26118Z"></path><path d="M6.04269 9.30707C6.33558 9.59997 6.33558 10.0748 6.04269 10.3677L5.32184 11.0886C3.22605 13.1844 3.22605 16.5823 5.32184 18.6781C7.41763 20.7739 10.8156 20.7739 12.9114 18.6781L13.6322 17.9573C13.9251 17.6644 14.4 17.6644 14.6929 17.9573C14.9858 18.2501 14.9858 18.725 14.6929 19.0179L13.972 19.7388C11.2905 22.4203 6.94276 22.4203 4.26118 19.7388C1.57961 17.0572 1.57961 12.7095 4.26118 10.0279L4.98203 9.30707C5.27492 9.01418 5.7498 9.01418 6.04269 9.30707Z"></path></g><path d="M14.6933 9.30707C14.9862 9.59997 14.9862 10.0748 14.6933 10.3677L10.3682 14.6928C10.0753 14.9857 9.60045 14.9857 9.30756 14.6928C9.01467 14.3999 9.01467 13.9251 9.30756 13.6322L13.6327 9.30707C13.9255 9.01418 14.4004 9.01418 14.6933 9.30707Z"></path></g></svg></span>DNS 解析流程</a></p>
+<div class="tag-plugin image"><div class="image-bg" style=";aspect-ratio:1187/1519;" data-stellar-image-ratio="true"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/img/2025/clash-dns-configure/cover.png" alt="DNS Resolve" data-fancybox="true" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;" width="1187" height="1519" data-stellar-image-dimensions="true" data-stellar-image-color="{&quot;size&quot;:64,&quot;hsla&quot;:[215.4341,32.4487,97.7096,1]}" data-stellar-image-source="/img/2025/clash-dns-configure/cover.png"><div class="lazy-icon"></div></div><div class="image-meta"><span class="image-caption center">DNS Resolve</span></div></div>
+
+<h1 id="配置指南"><a href="#配置指南" class="headerlink" title="配置指南"></a>配置指南</h1><p>我们直接给出推荐配置，并结合上边的解析流程来详细分析：</p>
+<figure class="highlight yaml"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">geodata-mode:</span> <span class="literal">true</span> </span><br><span class="line"><span class="attr">geodata-loader:</span> <span class="string">memconservative</span></span><br><span class="line"><span class="attr">geo-auto-update:</span> <span class="literal">true</span></span><br><span class="line"><span class="attr">geo-update-interval:</span> <span class="number">24</span></span><br><span class="line"><span class="attr">geox-url:</span></span><br><span class="line">  <span class="attr">geoip:</span> <span class="string">"https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geoip.dat"</span></span><br><span class="line">  <span class="attr">geosite:</span> <span class="string">"https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/geosite.dat"</span></span><br><span class="line">  <span class="attr">mmdb:</span> <span class="string">"https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@release/country.mmdb"</span></span><br><span class="line">  <span class="attr">asn:</span> <span class="string">"https://github.com/xishang0128/geoip/releases/download/latest/GeoLite2-ASN.mmdb"</span></span><br><span class="line"><span class="attr">dns:</span></span><br><span class="line">  <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">prefer-h3:</span> <span class="literal">false</span> <span class="comment"># DOH 优先使用 http/3</span></span><br><span class="line">  <span class="attr">use-hosts:</span> <span class="literal">true</span> <span class="comment"># 是否回应配置中的 hosts，默认 true</span></span><br><span class="line">  <span class="attr">use-system-hosts:</span> <span class="literal">false</span> <span class="comment"># 是否查询系统 hosts，默认 true，我们不用系统 hosts</span></span><br><span class="line">  <span class="attr">listen:</span> <span class="number">0.0</span><span class="number">.0</span><span class="number">.0</span><span class="string">:53</span> <span class="comment"># DNS 服务监听，仅支持 udp</span></span><br><span class="line">  <span class="attr">ipv6:</span> <span class="literal">true</span> <span class="comment"># ipv6 解析开关</span></span><br><span class="line">  <span class="attr">default-nameserver:</span> <span class="comment"># 默认 DNS, 用于解析 DNS 服务器 的域名，必须为 IP, 可为加密 DNS</span></span><br><span class="line">    <span class="bullet">-</span> <span class="number">1.2</span><span class="number">.4</span><span class="number">.8</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">tls://223.5.5.5</span></span><br><span class="line">  <span class="attr">enhanced-mode:</span> <span class="string">fake-ip</span> <span class="comment"># or reder-host</span></span><br><span class="line">  <span class="attr">fake-ip-range:</span> <span class="number">172.29</span><span class="number">.0</span><span class="number">.1</span><span class="string">/16</span> <span class="comment"># Fake-IP 解析地址池</span></span><br><span class="line">  <span class="attr">fake-ip-filter:</span> <span class="comment"># Fake-IP 过滤，列表中的域名返回真实 IP</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'+.lan'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'+.in-addr.arpa'</span></span><br><span class="line">  <span class="comment"># 配置后面的nameserver、fallback和nameserver-policy向dns服务器的连接过程是否遵守遵守rules规则</span></span><br><span class="line">  <span class="comment"># 如果为false（默认值）则这三部分的dns服务器在未特别指定的情况下会直连</span></span><br><span class="line">  <span class="comment"># 如果为true，将会按照rules的规则匹配链接方式（走代理或直连），如果有特别指定则任然以指定值为准</span></span><br><span class="line">  <span class="comment"># 仅当proxy-server-nameserver非空时可以开启此选项, 强烈不建议和prefer-h3一起使用</span></span><br><span class="line">  <span class="comment"># 此外，这三者配置中的dns服务器如果出现域名会采用default-nameserver配置项解析，也请确保正确配置default-nameserver</span></span><br><span class="line">  <span class="attr">respect-rules:</span> <span class="literal">false</span></span><br><span class="line">  <span class="comment"># 配置查询域名使用的 DNS 服务器</span></span><br><span class="line">  <span class="attr">nameserver-policy:</span></span><br><span class="line">    <span class="string">"+.lan,+.in-addr.arpa"</span><span class="string">:</span> <span class="string">system</span></span><br><span class="line">    <span class="comment"># 广告拦截，效果有限，请使用浏览器扩展等更有效的手段</span></span><br><span class="line">    <span class="attr">"geosite:category-ads-all":</span> <span class="string">rcode://success</span></span><br><span class="line">    <span class="comment"># 禁止 apple 更新检测</span></span><br><span class="line">    <span class="attr">"geosite:apple-update":</span> <span class="string">rcode://success</span></span><br><span class="line">    <span class="attr">"rule-set:direct":</span></span><br><span class="line">      <span class="comment"># 阿里 DNS</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.5.5.5</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.6.6.6</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'https://223.5.5.5/dns-query#h3=true'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'https://223.6.6.6/dns-query#h3=true'</span></span><br><span class="line">    <span class="string">"geosite:private,onedrive,microsoft@cn,apple@cn,steam@cn,google@cn,jetbrains@cn,category-games@cn,cn"</span><span class="string">:</span></span><br><span class="line">      <span class="comment"># 阿里 DNS</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.5.5.5</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">tls://223.6.6.6</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'https://223.5.5.5/dns-query#h3=true'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'https://223.6.6.6/dns-query#h3=true'</span></span><br><span class="line">  <span class="attr">proxy-server-nameserver:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://223.5.5.5/dns-query#h3=true'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://223.6.6.6/dns-query#h3=true'</span></span><br><span class="line">  <span class="attr">nameserver:</span></span><br><span class="line">    <span class="comment"># Cloudflare</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://1.1.1.1#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://1.0.0.1#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://1.1.1.1/dns-query#PROXY&amp;h3=true'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://1.0.0.1/dns-query#PROXY&amp;h3=true'</span></span><br><span class="line">    <span class="comment"># Google</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://8.8.8.8#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://8.8.4.4#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://8.8.8.8/dns-query#PROXY&amp;h3=true'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://8.8.4.4/dns-query#PROXY&amp;h3=true'</span></span><br><span class="line">    <span class="comment"># 101</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://101.101.101.101#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://101.101.101.101/dns-query#PROXY'</span></span><br><span class="line">    <span class="comment"># dns.sb</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://185.222.222.222#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'tls://45.11.45.11#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://185.222.222.222/dns-query#PROXY'</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">'https://45.11.45.11/dns-query#PROXY'</span></span><br><span class="line"><span class="attr">rule-providers:</span></span><br><span class="line">  <span class="attr">direct:</span></span><br><span class="line">    <span class="attr">behavior:</span> <span class="string">classical</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">inline</span></span><br><span class="line">    <span class="attr">payload:</span></span><br><span class="line">      <span class="comment"># CDN</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,download-cdn.jetbrains.com'</span></span><br><span class="line">      <span class="comment"># Clash Dashboard &amp; Converter</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,clash.razord.top'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,yacd.haishan.me'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,nexconvert.com'</span></span><br><span class="line">      <span class="comment"># DDNS</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN-SUFFIX,ip.sb'</span></span><br><span class="line">      <span class="comment"># time</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,time.android.com'</span></span><br><span class="line">  <span class="attr">proxy:</span></span><br><span class="line">    <span class="attr">behavior:</span> <span class="string">classical</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">inline</span></span><br><span class="line">    <span class="attr">payload:</span></span><br><span class="line">      <span class="comment"># 这些域名虽然在国内有接入点，但是直连体验并不好，因此强制代理</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,dockerstatic.com'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,fonts.googleapis.com'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,fonts.gstatic.com'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN,www.gstatic.com'</span></span><br><span class="line">  <span class="attr">reject:</span></span><br><span class="line">    <span class="attr">behavior:</span> <span class="string">classical</span></span><br><span class="line">    <span class="attr">type:</span> <span class="string">inline</span></span><br><span class="line">    <span class="attr">payload:</span></span><br><span class="line">      <span class="comment"># niconico 广告</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN-SUFFIX,ads.nicovideo.jp'</span></span><br><span class="line">      <span class="comment"># mumu 模拟器广告</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN-SUFFIX,mumu.nie.netease.com'</span></span><br><span class="line">      <span class="comment"># postman 更新</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN-SUFFIX,dl.pstmn.io'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN-SUFFIX,sync-v3.getpostman.com'</span></span><br><span class="line">      <span class="bullet">-</span> <span class="string">'DOMAIN-SUFFIX,getpostman.com'</span></span><br><span class="line"><span class="attr">rules:</span></span><br><span class="line">  <span class="comment"># 个人规则，1.2.3.4 用作示例</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">IP-CIDR,1.2.3.4/32,PROXY,no-resolve</span></span><br><span class="line">  <span class="comment"># 规则修正</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">RULE-SET,reject,REJECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">RULE-SET,proxy,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">RULE-SET,direct,DIRECT</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># 广告过滤</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,category-ads-all,REJECT</span></span><br><span class="line">  <span class="comment"># 强制直连</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,private,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,onedrive,DIRECT</span></span><br><span class="line">  <span class="comment"># @cn 为该规则内的域名在中国大陆有接入点，可直连</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,microsoft@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,apple@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,steam@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,google@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,jetbrains@cn,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,category-games@cn,DIRECT</span></span><br><span class="line">  <span class="comment"># 流媒体</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,biliintl,国际流媒体</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,youtube,国际流媒体</span></span><br><span class="line">  <span class="comment"># 强制代理</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,google,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,twitter,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,pixiv,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,category-scholar-!cn,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,geolocation-!cn,PROXY</span></span><br><span class="line">  <span class="comment"># 兜底强制直连</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOSITE,cn,DIRECT</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># GEOIP 规则</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,private,DIRECT</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,telegram,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,JP,PROXY</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">GEOIP,CN,DIRECT</span></span><br><span class="line"></span><br><span class="line">  <span class="comment"># 兜底代理</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">MATCH,PROXY</span></span><br></pre></td></tr></tbody></table></figure>
+
+<p>在这个配置中，最最核心的就是利用 <code>GEOSITE</code> 来进行域名规则的判断，以下我们分为几种情况来分析其解析流程。</p>
+<h2 id="1-直接通过-ip-访问"><a href="#1-直接通过-ip-访问" class="headerlink" title="1. 直接通过 ip 访问"></a>1. 直接通过 ip 访问</h2><p>直接通过 <code>1.2.3.4</code> 访问会命中 <code>IP-CIDR,1.2.3.4/32,PROXY,no-resolve</code> 规则，它会跳过 DNS 解析流程并直接交给对应的策略处理（这里配置为 PROXY 策略）。</p>
+<p>假设我们同时有一个域名 <code>example.com</code> 也指向了 <code>1.2.3.4</code>，那我们访问域名的时候并不会走到这条规则，因为规则添加了 <code>no-resolve</code> 条件，除非是直接通过 IP 访问，否则直接跳过此规则。</p>
+<h2 id="2-访问境内域名，命中-GEOSITE-规则"><a href="#2-访问境内域名，命中-GEOSITE-规则" class="headerlink" title="2. 访问境内域名，命中 GEOSITE 规则"></a>2. 访问境内域名，命中 GEOSITE 规则</h2><p>当访问的境内域名命中 <code>GEOSITE</code> 规则时，由于指定了 <code>DIRECT</code> 策略，虚空终端会进入 DNS 解析流程，结合配置文件来说流程如下：</p>
+<ol>
+<li>查询 DNS 缓存，如果查到，拿出对应的 IP 并直接建立连接</li>
+<li>匹配 <code>nameserver-policy</code>，我们将所有的境内规则的 <code>GEOSITE</code> 也都配置在了这里，因此肯定会命中这条规则。在 <code>nameserver-policy</code> 内容里我们配置了 AliDNS 的 DoT 和 DoH，虚空终端会并发查询这些 nameserver 并返回最快返回的结果</li>
+<li>拿到域名解析结果，直接建立连接，并保存 DNS 缓存</li>
+</ol>
+<h2 id="3-访问境外域名，命中-GEOSITE-规则"><a href="#3-访问境外域名，命中-GEOSITE-规则" class="headerlink" title="3. 访问境外域名，命中 GEOSITE 规则"></a>3. 访问境外域名，命中 GEOSITE 规则</h2><p>当访问的境外域名命中 <code>GEOSITE</code> 规则时，由于指定了 <code>PROXY</code> 策略，因此虚空终端会直接将域名解析与请求处理路由到 <code>PROXY</code> 节点，跳过自身所有的 DNS 解析流程。</p>
+<h2 id="4-访问任意域名，未命中境内或境外-GEOSITE-规则"><a href="#4-访问任意域名，未命中境内或境外-GEOSITE-规则" class="headerlink" title="4. 访问任意域名，未命中境内或境外 GEOSITE 规则"></a>4. 访问任意域名，未命中境内或境外 GEOSITE 规则</h2><p>境内境外 <code>GEOSITE</code> 规则未命中时，规则解析一路往下走到 <code>GEOIP</code> 规则，<code>GEOIP</code> 规则判断前需要先拿到域名对应的 IP，因此虚空终端会发起一次 DNS 解析流程：</p>
+<ol>
+<li>查询 DNS 缓存，如果查到，拿出对应的 IP 交给 <code>GEOIP</code> 规则判断</li>
+<li>匹配 <code>nameserver-policy</code>，我们在这里配置的 <code>GEOSITE</code> 规则跟 <code>rules</code> 里用的 <code>GEOSITE</code> 规则是一致的，因此也无法命中</li>
+<li>兜底使用 <code>nameserver</code>，在内容里我们配置了常用的境外 DoT 和 DoH，并且指定这些 DNS 查询时使用 <code>PROXY</code> 节点以加速（境外 DNS 境内直接访问延迟很高），同时配置了 <code>proxy-server-nameserver</code> 来避免鸡蛋问题（考虑到解析速度配置成了 AliDNS，无奈之举），另外节点如果支持 H3 则尽可能使用 H3（这点存疑，境内到境外 H3 稳定性不确定）</li>
+<li>拿到域名解析结果，交给 <code>GEOIP</code> 规则判断，并保存 DNS 缓存</li>
+<li>如果 <code>GEOIP</code> 规则判断直连，则直接建立连接，如果 <code>GEOIP</code> 规则未命中，则走到兜底使用代理建立连接</li>
+</ol>
+<p>可以看到，我们兜底使用远程节点来解析未命中规则的域名，我个人倾向于假设未命中规则的都是境外域名，因此都由境外 DNS 解析来避免国内 DNS 保留记录。当然这里也可以改为使用境内 DNS 解析，两种策略任君自选。</p>
+<h2 id="5-规则修正"><a href="#5-规则修正" class="headerlink" title="5. 规则修正"></a>5. 规则修正</h2><p>规则库不是万能的，因此必然会出现某些域名分流错误的情况，我们通过补充的 <code>direct</code>、<code>proxy</code>、<code>reject</code> 三个 <code>RULE-SET</code> 来前置修正规则。</p>
+<h2 id="补充说明-rule-providers"><a href="#补充说明-rule-providers" class="headerlink" title="补充说明: rule-providers"></a>补充说明: rule-providers</h2><p>我们将强制修正的规则通过 <code>rule-providers</code> 维护，这样做的好处是可以在 <code>rules</code> 和 <code>dns</code> 中使用 <code>rule-set</code> 引用同一份配置，无需重复编写。在配置内容上使用 <code>inline</code> + <code>classical</code> 配合的形式，使得我们无需依赖远程仓库（旧做法是使用 GitHub 仓库或者 gist 托管），同时又可以使用 <code>DOMAIN-SUFFIX</code>、<code>DOMAIN-KEYWORD</code> 等特性，调整成本非常低。</p>
+<h2 id="补充说明-default-nameserver、fallback"><a href="#补充说明-default-nameserver、fallback" class="headerlink" title="补充说明: default-nameserver、fallback"></a>补充说明: default-nameserver、fallback</h2><p><code>default-nameserver</code>: 用于解析 <code>nameserver</code>、<code>fallback</code>、<code>nameserver-policy</code> 中通过域名指定的 DNS 服务器，我们使用 IP 配置 DoT 和 DoH 节点，因此不再需要此配置。<br><code>fallback</code>: 虚空终端之前 Clash 使用的策略，逻辑比较复杂，不再推荐，使用更加简单易懂的 <code>nameserver-policy</code> 替代。</p>
+<h2 id="补充说明-GEOIP-no-resolve-是错误用法"><a href="#补充说明-GEOIP-no-resolve-是错误用法" class="headerlink" title="补充说明: GEOIP + no-resolve 是错误用法"></a>补充说明: GEOIP + no-resolve 是错误用法</h2><p>网上存在很多在 <code>GEOIP,CN,DIRECT</code> 后加上 <code>no-resolve</code> 的，这实际上是一个<mark class="tag-plugin colorful mark" color="error">错误</mark>的用法，<code>GEOIP</code> 类规则就是要解析出 IP 后再进行 IP 判定的，加了 <code>no-resolve</code> 后如果不是直接通过 IP 访问的话，这条规则就失效了。</p>
+<p>同时，虚空终端的规则处理流程是从上往下严格有序的，如果遇到了 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等）会尝试进行 DNS 解析拿到 IP 再判断这条规则，如果某个 IP 类规则不带 <code>no-resolve</code> 并且放的比较靠前，那么必然会产生多余的 DNS 解析。</p>
+<p>因此，这里的正确用法是<mark class="tag-plugin colorful mark" color="green">将所有的 IP 类规则（GEOIP、IP-CIDR、IP-CIDR6 等）统一放到域名规则之后</mark>，如配置中将所有的 <code>GEOIP</code> 规则都放到了最后边，同时针对需要直接指定 IP 访问的（配置示例中为 <code>1.2.3.4</code>）规则添加 <code>no-resolve</code> 来避免多余的 DNS 解析。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>通过上述的配置与解析，相信你已经对虚空终端的处理流程了如指掌，如果配置过程中遇到什么问题或者与文章不符的情况欢迎评论。</p>
+</article>
+<div class="article-tags slide-up"><a class="tag" href="/tags/Clash-Meta/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>Clash.Meta</a><a class="tag" href="/tags/Mihomo/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>Mihomo</a><a class="tag" href="/tags/DNS/"><svg class="icon" viewBox="0 0 1 1" data-icon="default:hashtag" aria-hidden="true"></svg>DNS</a></div>
+
+
+  <div class="article-share slide-up" id="share">
+    <div class="body">
+      <div class="social-wrap dis-select"><a class="social share-item qrcode ui-interactive is-icon-only" onclick="util.toggle(&quot;share-qrcode&quot;)" aria-label="分享文章: QR Code" title="分享文章: QR Code"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" d="M10.553 13.447c-.424-.424-.95-.596-1.535-.675c-.553-.074-1.25-.074-2.086-.074H5.827c-.58 0-1.065 0-1.459.037c-.411.04-.795.124-1.146.34c-.345.21-.634.5-.845.844c-.216.352-.3.735-.34 1.147C2 15.459 2 15.944 2 16.525v.068c0 .884 0 1.597.055 2.17c.056.592.175 1.108.459 1.571c.288.47.682.864 1.152 1.152c.463.284.979.403 1.57.46C5.81 22 6.524 22 7.407 22h.07c.58 0 1.064 0 1.458-.037c.412-.04.795-.124 1.147-.34c.344-.21.633-.5.844-.844c.216-.352.3-.736.34-1.147c.037-.394.037-.879.037-1.46v-1.104c0-.836 0-1.533-.074-2.086c-.079-.584-.251-1.111-.675-1.535m-1.62-11.41c.412.04.795.124 1.147.34c.344.21.633.5.844.845c.216.351.3.735.34 1.146c.037.394.037.879.037 1.46v1.104c0 .836 0 1.533-.074 2.086c-.079.584-.251 1.111-.675 1.535s-.95.596-1.535.675c-.553.074-1.25.074-2.086.074H5.827c-.58 0-1.065 0-1.459-.037c-.411-.04-.795-.124-1.146-.34a2.56 2.56 0 0 1-.845-.844c-.216-.352-.3-.735-.34-1.147C2 8.54 2 8.056 2 7.475v-.068c0-.884 0-1.597.055-2.17c.056-.592.175-1.108.459-1.571c.288-.47.682-.864 1.152-1.152c.463-.284.979-.403 1.57-.46C5.81 2 6.524 2 7.407 2h.07c.58 0 1.064 0 1.458.037M16.593 2h-.068c-.58 0-1.065 0-1.46.037c-.41.04-.794.124-1.146.34c-.344.21-.633.5-.844.845c-.216.351-.3.735-.34 1.146c-.037.394-.037.879-.037 1.46v1.104c0 .836 0 1.533.074 2.086c.079.584.251 1.111.675 1.535s.95.596 1.535.675c.553.074 1.25.074 2.086.074h1.105c.58 0 1.065 0 1.459-.037c.411-.04.795-.124 1.146-.34c.345-.21.634-.5.845-.844c.216-.352.3-.735.34-1.147C22 8.54 22 8.056 22 7.475v-.068c0-.884 0-1.597-.055-2.17c-.056-.592-.175-1.108-.459-1.571a3.5 3.5 0 0 0-1.152-1.152c-.463-.284-.979-.403-1.57-.46C18.19 2 17.477 2 16.594 2" opacity=".5"></path><path fill="currentColor" d="M14.093 21.302a.698.698 0 1 1-1.396 0v-2.79h1.396z" opacity=".4"></path><path fill="currentColor" d="M21.302 12.698a.7.7 0 0 0-.697.697v3.256H22v-3.256a.7.7 0 0 0-.698-.697" opacity=".5"></path><path fill="currentColor" d="M16.076 16.617c-.076.184-.076.417-.076.883s0 .699.076.883a1 1 0 0 0 .541.54c.184.077.417.077.883.077s.699 0 .883-.076a1 1 0 0 0 .54-.541c.077-.184.077-.417.077-.883s0-.699-.076-.883a1 1 0 0 0-.541-.54C18.199 16 17.966 16 17.5 16s-.699 0-.883.076a1 1 0 0 0-.54.541"></path><path fill="currentColor" d="M22 18.535v-.023h-1.396c0 .443 0 .74-.016.97c-.015.224-.043.333-.073.405a1.16 1.16 0 0 1-.629.63c-.072.029-.18.056-.405.072c-.23.015-.527.016-.97.016h-1.86V22h1.883c.414 0 .759 0 1.042-.02a2.6 2.6 0 0 0 .844-.175a2.56 2.56 0 0 0 1.384-1.384c.112-.27.156-.549.176-.844c.02-.283.02-.628.02-1.042" opacity=".7"></path><path fill="currentColor" d="M12.697 16.616v.035h1.396c0-.668 0-1.116.035-1.458c.034-.33.093-.482.16-.583a1.2 1.2 0 0 1 .321-.32c.101-.068.254-.128.584-.161c.342-.035.79-.036 1.458-.036h1.86v-1.395h-1.896c-.623 0-1.142 0-1.563.043c-.44.044-.85.142-1.218.388c-.28.187-.519.426-.706.706c-.246.368-.343.777-.388 1.217c-.043.421-.043.94-.043 1.564" opacity=".6"></path><path fill="currentColor" d="M5.508 18.69c.219.155.528.155 1.146.155c.619 0 .928 0 1.146-.155a.8.8 0 0 0 .2-.199c.154-.218.154-.527.154-1.146s0-.927-.155-1.146A.8.8 0 0 0 7.8 16c-.218-.155-.527-.155-1.146-.155s-.927 0-1.146.155a.8.8 0 0 0-.199.2c-.155.218-.155.527-.155 1.145c0 .619 0 .928.155 1.146a.8.8 0 0 0 .2.2M6.654 8.155c-.618 0-.927 0-1.146-.155a.8.8 0 0 1-.199-.2c-.155-.217-.155-.527-.155-1.145c0-.619 0-.928.155-1.146a.8.8 0 0 1 .2-.2c.218-.154.527-.154 1.145-.154c.619 0 .928 0 1.146.155a.8.8 0 0 1 .2.199c.154.218.154.527.154 1.146s0 .928-.155 1.146A.8.8 0 0 1 7.8 8c-.218.155-.527.155-1.146.155M16.2 8c.218.155.527.155 1.146.155s.927 0 1.146-.155a.8.8 0 0 0 .199-.199c.155-.218.155-.528.155-1.146c0-.619 0-.928-.155-1.146a.8.8 0 0 0-.2-.2c-.218-.154-.527-.154-1.145-.154c-.619 0-.928 0-1.146.155a.8.8 0 0 0-.2.199c-.154.218-.154.527-.154 1.146s0 .928.155 1.146A.8.8 0 0 0 16.2 8"></path></svg></span></a><a class="social share-item weibo ui-interactive is-icon-only" href="https://service.weibo.com/share/share.php?url=https%3A%2F%2Fblog.akise.app%2Fposts%2Fclash-dns-configure%2F&amp;title=Clash.Meta%20DNS%20%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97%20-%20AA%E5%8D%9A%E5%AE%A2&amp;pics=%2Fimg%2F2025%2Fclash-dns-configure%2Fcover.png&amp;summary=Clash%20DNS%20%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97%EF%BC%8C%E8%AF%A6%E7%BB%86%E6%8F%8F%E8%BF%B0%20Clash%20%E4%B8%AD%20DNS%20%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B%E4%B8%8E%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: Weibo" title="分享文章: Weibo"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M10.098 20.323c-3.977.391-7.414-1.406-7.672-4.02-.259-2.609 2.759-5.047 6.74-5.441 3.979-.394 7.413 1.404 7.671 4.018.259 2.6-2.759 5.049-6.737 5.439l-.002.004zM9.05 17.219c-.384.616-1.208.884-1.829.602-.612-.279-.793-.991-.406-1.593.379-.595 1.176-.861 1.793-.601.622.263.82.972.442 1.592zm1.27-1.627c-.141.237-.449.353-.689.253-.236-.09-.313-.361-.177-.586.138-.227.436-.346.672-.24.239.09.315.36.18.601l.014-.028zm.176-2.719c-1.893-.493-4.033.45-4.857 2.118-.836 1.704-.026 3.591 1.886 4.21 1.983.64 4.318-.341 5.132-2.179.8-1.793-.201-3.642-2.161-4.149zm7.563-1.224c-.346-.105-.57-.18-.405-.615.375-.977.42-1.804 0-2.404-.781-1.112-2.915-1.053-5.364-.03 0 0-.766.331-.571-.271.376-1.217.315-2.224-.27-2.809-1.338-1.337-4.869.045-7.888 3.08C1.309 10.87 0 13.273 0 15.348c0 3.981 5.099 6.395 10.086 6.395 6.536 0 10.888-3.801 10.888-6.82 0-1.822-1.547-2.854-2.915-3.284v.01zm1.908-5.092c-.766-.856-1.908-1.187-2.96-.962-.436.09-.706.511-.616.932.09.42.511.691.932.602.511-.105 1.067.044 1.442.465.376.421.466.977.316 1.473-.136.406.089.856.51.992.405.119.857-.105.992-.512.33-1.021.12-2.178-.646-3.035l.03.045zm2.418-2.195c-1.576-1.757-3.905-2.419-6.054-1.968-.496.104-.812.587-.706 1.081.104.496.586.813 1.082.707 1.532-.331 3.185.15 4.296 1.383 1.112 1.246 1.429 2.943.947 4.416-.165.48.106 1.007.586 1.157.479.165.991-.104 1.157-.586.675-2.088.241-4.478-1.338-6.235l.03.045z"></path></svg></span></a><a class="social share-item x ui-interactive is-icon-only" href="https://x.com/intent/tweet?text=Clash.Meta%20DNS%20%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97%20-%20AA%E5%8D%9A%E5%AE%A2&amp;url=https%3A%2F%2Fblog.akise.app%2Fposts%2Fclash-dns-configure%2F" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: X" title="分享文章: X"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M14.234 10.162L22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299l-.929-1.329L3.076 1.56h3.182l5.965 8.532l.929 1.329l7.754 11.09h-3.182z"></path></svg></span></a><a class="social share-item telegram ui-interactive is-icon-only" href="https://t.me/share/url?url=https%3A%2F%2Fblog.akise.app%2Fposts%2Fclash-dns-configure%2F&amp;text=Clash.Meta%20DNS%20%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97%20-%20AA%E5%8D%9A%E5%AE%A2" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: Telegram" title="分享文章: Telegram"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0zm4.962 7.224c.1-.002.321.023.465.14a.5.5 0 0 1 .171.325c.016.093.036.306.02.472c-.18 1.898-.962 6.502-1.36 8.627c-.168.9-.499 1.201-.82 1.23c-.696.065-1.225-.46-1.9-.902c-1.056-.693-1.653-1.124-2.678-1.8c-1.185-.78-.417-1.21.258-1.91c.177-.184 3.247-2.977 3.307-3.23c.007-.032.014-.15-.056-.212s-.174-.041-.249-.024q-.159.037-5.061 3.345q-.72.495-1.302.48c-.428-.008-1.252-.241-1.865-.44c-.752-.245-1.349-.374-1.297-.789q.04-.324.893-.663q5.247-2.286 6.998-3.014c3.332-1.386 4.025-1.627 4.476-1.635"></path></svg></span></a><a class="social share-item whatsapp ui-interactive is-icon-only" href="https://wa.me/?text=Clash.Meta%20DNS%20%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97%20-%20AA%E5%8D%9A%E5%AE%A2%0Ahttps%3A%2F%2Fblog.akise.app%2Fposts%2Fclash-dns-configure%2F" target="_blank" rel="external nofollow noopener noreferrer" aria-label="分享文章: WhatsApp" title="分享文章: WhatsApp"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Simple Icons - https://creativecommons.org/publicdomain/zero/1.0/ --><path fill="currentColor" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967c-.273-.099-.471-.148-.67.15c-.197.297-.767.966-.94 1.164c-.173.199-.347.223-.644.075c-.297-.15-1.255-.463-2.39-1.475c-.883-.788-1.48-1.761-1.653-2.059c-.173-.297-.018-.458.13-.606c.134-.133.298-.347.446-.52s.198-.298.298-.497c.099-.198.05-.371-.025-.52s-.669-1.612-.916-2.207c-.242-.579-.487-.5-.669-.51a13 13 0 0 0-.57-.01c-.198 0-.52.074-.792.372c-.272.297-1.04 1.016-1.04 2.479c0 1.462 1.065 2.875 1.213 3.074s2.096 3.2 5.077 4.487c.709.306 1.262.489 1.694.625c.712.227 1.36.195 1.871.118c.571-.085 1.758-.719 2.006-1.413s.248-1.289.173-1.413c-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214l-3.741.982l.998-3.648l-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884c2.64 0 5.122 1.03 6.988 2.898a9.82 9.82 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.82 11.82 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.9 11.9 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.82 11.82 0 0 0-3.48-8.413"></path></svg></span></a><a class="social share-item email ui-interactive is-icon-only" href="mailto:?subject=Clash.Meta%20DNS%20%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97%20-%20AA%E5%8D%9A%E5%AE%A2&amp;body=https%3A%2F%2Fblog.akise.app%2Fposts%2Fclash-dns-configure%2F" aria-label="分享文章: Email" title="分享文章: Email"><span class="share-item__icon ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" fill-rule="evenodd" d="M3.172 5.172C2 6.343 2 8.229 2 12s0 5.657 1.172 6.828C4.343 20 6.229 20 10 20h4c3.771 0 5.657 0 6.828-1.172C22 17.657 22 15.771 22 12s0-5.657-1.172-6.828C19.657 4 17.771 4 14 4h-4C6.229 4 4.343 4 3.172 5.172m15.404 2.348a.75.75 0 0 1-.096 1.056l-2.196 1.83c-.887.739-1.605 1.338-2.24 1.746-.66.424-1.303.693-2.044.693s-1.384-.269-2.045-.693c-.634-.408-1.352-1.007-2.239-1.745L5.52 8.576a.75.75 0 1 1 .96-1.152l2.159 1.799c.933.777 1.58 1.315 2.128 1.667.529.34.888.455 1.233.455s.704-.115 1.233-.455c.547-.352 1.195-.89 2.128-1.667l2.159-1.8a.75.75 0 0 1 1.056.097" clip-rule="evenodd"></path></svg></span></a></div>
+      <div class="share-qrcode" id="share-qrcode" style="opacity:0;height:0"><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://api.qrserver.com/v1/create-qr-code/?size=256x256&amp;data=https%3A%2F%2Fblog.akise.app%2Fposts%2Fclash-dns-configure%2F" onerror="this.onerror=null;this.src=&quot;/images/stellar-error.491ee870f4940739.svg&quot;"></div>
+    </div>
+  </div>
+
+<div class="article-footer slide-up">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section></div>
+
+<div class="related-wrap slide-up" id="read-next"><section class="body"><div class="item" id="prev"><div class="note"><svg class="icon" viewBox="0 0 1 1" data-icon="default:arrow-left" aria-hidden="true"></svg> 较新文章</div><a href="/posts/cloudflare-redirect-invalid-url/">利用 Cloudflare 重定向规则自动处理非法 URL</a></div><div class="item" id="next"><div class="note">较早文章 <svg class="icon" viewBox="0 0 1 1" data-icon="default:arrow-right" aria-hidden="true"></svg></div><a href="/posts/cloudflare-redirect-rule/">利用 Cloudflare 重定向规则摆脱端口访问服务</a></div></section></div>
+
+
+
+
+  <div class="related-wrap md-text slide-up" id="comments">
+    
+    
+    <section class="header cmt-title cap theme">
+      <p>Take it easy to comment or discuss / 欢迎评论或讨论</p>
+
+    </section>
+    
+    <section class="body cmt-body giscus">
+      
+
+<div class="lazy-icon"></div>
+
+<div id="giscus" data-repo="akiakise/blog.akise.app" data-repo-id="R_kgDOLkT3kg" data-category="Announcements" data-category-id="DIC_kwDOLkT3ks4CeK_U" data-mapping="pathname" data-strict="0" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="preferred_color_scheme" data-lang="zh-CN" crossorigin="anonymous"></div>
+
+    </section>
+  </div>
+
+
+
+<footer class="page-footer slide-up footnote"><hr><div class="text"><p><span id="blog_history">© 2017 - 2026 ♥ <a href="https://github.com/xaoxuu/hexo-theme-stellar" target="_blank">Stellar</a></span></p>
+<p>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+</main>
+<aside data-stellar-runtime-region="" id="rightbar-region" class="site-region site-region--rightbar" data-region="rightbar" aria-label="Rightbar"><div class="site-region__surface ui-drawer-surface"><div class="site-region__viewport"><div class="widgets widget-stack widget-stack--rightbar widget-stack--rightbar"><div class="widget-instance widget-instance--toc" data-widget-id="rightbar:1:toc" data-presentation="rightbar">
+
+
+<widget class="widget-wrapper slide-up toc" id="data-toc" collapse="false">
+  
+    <div class="widget-header dis-select">
+      <span class="name">本文目录</span>
+      <button type="button" class="cap-action ui-interactive card-hover card-hover--spotlight" data-shell-action="toggle-toc" aria-label="Toggle table of contents" aria-pressed="false"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg></span></button>
+    </div>
+  
+  <div class="widget-body"><ol class="toc ui-collection-adapter"><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#DNS-%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B"><span class="toc-text">DNS 解析流程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E9%85%8D%E7%BD%AE%E6%8C%87%E5%8D%97"><span class="toc-text">配置指南</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#1-%E7%9B%B4%E6%8E%A5%E9%80%9A%E8%BF%87-ip-%E8%AE%BF%E9%97%AE"><span class="toc-text">1. 直接通过 ip 访问</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#2-%E8%AE%BF%E9%97%AE%E5%A2%83%E5%86%85%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%91%BD%E4%B8%AD-GEOSITE-%E8%A7%84%E5%88%99"><span class="toc-text">2. 访问境内域名，命中 GEOSITE 规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#3-%E8%AE%BF%E9%97%AE%E5%A2%83%E5%A4%96%E5%9F%9F%E5%90%8D%EF%BC%8C%E5%91%BD%E4%B8%AD-GEOSITE-%E8%A7%84%E5%88%99"><span class="toc-text">3. 访问境外域名，命中 GEOSITE 规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#4-%E8%AE%BF%E9%97%AE%E4%BB%BB%E6%84%8F%E5%9F%9F%E5%90%8D%EF%BC%8C%E6%9C%AA%E5%91%BD%E4%B8%AD%E5%A2%83%E5%86%85%E6%88%96%E5%A2%83%E5%A4%96-GEOSITE-%E8%A7%84%E5%88%99"><span class="toc-text">4. 访问任意域名，未命中境内或境外 GEOSITE 规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#5-%E8%A7%84%E5%88%99%E4%BF%AE%E6%AD%A3"><span class="toc-text">5. 规则修正</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E-rule-providers"><span class="toc-text">补充说明: rule-providers</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E-default-nameserver%E3%80%81fallback"><span class="toc-text">补充说明: default-nameserver、fallback</span></a></li><li class="toc-item toc-level-2"><a class="toc-link ui-interactive" href="#%E8%A1%A5%E5%85%85%E8%AF%B4%E6%98%8E-GEOIP-no-resolve-%E6%98%AF%E9%94%99%E8%AF%AF%E7%94%A8%E6%B3%95"><span class="toc-text">补充说明: GEOIP + no-resolve 是错误用法</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link ui-interactive" href="#%E6%80%BB%E7%BB%93"><span class="toc-text">总结</span></a></li></ol></div>
+  <div class="widget-footer"><a class="top ui-interactive" onclick="util.scrollTop()"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" d="M20.536 3.464C22 4.93 22 7.286 22 12s0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12s0-7.071 1.464-8.536C4.93 2 7.286 2 12 2s7.071 0 8.535 1.464" opacity=".5"></path><path fill="currentColor" d="M9.53 12.03a.75.75 0 0 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06L12 9.56z"></path><path fill="currentColor" d="M9.53 16.03a.75.75 0 0 1-1.06-1.06l3-3a.75.75 0 0 1 1.06 0l3 3a.75.75 0 1 1-1.06 1.06L12 13.56z"></path></svg></span><span>回到顶部</span></a><a class="buttom ui-interactive" onclick="util.scrollComment()"><span class="ui-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Solar by 480 Design - https://creativecommons.org/licenses/by/4.0/ --><path fill="currentColor" d="m13.629 20.472l-.542.916c-.483.816-1.69.816-2.174 0l-.542-.916c-.42-.71-.63-1.066-.968-1.262c-.338-.197-.763-.204-1.613-.219c-1.256-.021-2.043-.098-2.703-.372a5 5 0 0 1-2.706-2.706C2 14.995 2 13.83 2 11.5v-1c0-3.273 0-4.91.737-6.112a5 5 0 0 1 1.65-1.651C5.59 2 7.228 2 10.5 2h3c3.273 0 4.91 0 6.113.737a5 5 0 0 1 1.65 1.65C22 5.59 22 7.228 22 10.5v1c0 2.33 0 3.495-.38 4.413a5 5 0 0 1-2.707 2.706c-.66.274-1.447.35-2.703.372c-.85.015-1.275.022-1.613.219c-.338.196-.548.551-.968 1.262" opacity=".5"></path><path fill="currentColor" d="M7.25 9A.75.75 0 0 1 8 8.25h8a.75.75 0 0 1 0 1.5H8A.75.75 0 0 1 7.25 9m0 3.5a.75.75 0 0 1 .75-.75h5.5a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1-.75-.75"></path></svg></span><span>参与讨论</span></a></div>
+</widget>
+
+
+</div></div></div></div></aside>
+</div><button type="button" class="site-scrim" data-shell-action="dismiss-drawer" aria-label="Close navigation" tabindex="-1"></button><div data-stellar-runtime-region="" class="site-dock" role="group" aria-label="Layout panels">
+  <button type="button" class="site-dock__button site-dock__button--rightbar ui-interactive" aria-label="Open rightbar" aria-controls="rightbar-region" aria-expanded="false" data-shell-action="toggle-rightbar-drawer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"></path></svg>
+  </button>
+  <button type="button" class="site-dock__button site-dock__button--leftbar ui-interactive" aria-label="Open leftbar" aria-controls="leftbar-region" aria-expanded="false" data-shell-action="toggle-leftbar-drawer">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"></path><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"></path></g></svg>
+  </button>
+</div>
+
+<dialog data-stellar-runtime-region="" class="search-dialog" id="site-search-dialog" aria-labelledby="site-search-title">
+  <div class="search-dialog__panel search-wrapper" id="site-search-wrapper" searching="false">
+    <div class="search-dialog__header">
+      <div class="search-form" role="search">
+        <span class="search-button" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Adapted from Google Material Icons by Material Design Authors - https://github.com/material-icons/material-icons/blob/master/LICENSE --><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3M3 13h3M3 18h8M16.83 13.83l3.76 3.76"></path><circle cx="14" cy="11" r="4"></circle></g></svg></span>
+        <input type="search" class="search-input" id="site-search-input" aria-labelledby="site-search-title" placeholder="搜索">
+      </div>
+      <button type="button" class="search-dialog__close" data-shell-action="close-search" aria-label="关闭搜索">×</button>
+    </div>
+    
+      <div class="search-dialog__scope" role="radiogroup" aria-labelledby="site-search-title" hidden="">
+        <label class="search-dialog__scope-option" data-search-scope-option="all">
+          <input class="ui-radio" type="radio" name="site-search-scope" value="all">
+          <span>全站</span>
+        </label>
+        <label class="search-dialog__scope-option" data-search-scope-option="blog" hidden="">
+          <input class="ui-radio" type="radio" name="site-search-scope" value="blog">
+          <span>博客</span>
+        </label>
+        <label class="search-dialog__scope-option" data-search-scope-option="current" hidden="">
+          <input class="ui-radio" type="radio" name="site-search-scope" value="current">
+          <span data-search-scope-current-label=""></span>
+        </label>
+      </div>
+    
+    <h2 class="search-dialog__title" id="site-search-title">站内搜索</h2>
+    <div class="search-result" id="site-search-result"></div>
+    <div class="search-no-result">没有找到内容！</div>
+  </div>
+</dialog>
+</div><div class="site-scripts">
+<script data-stellar-script="core" src="/js/stellar-icons.js?v=39c6ac17e854ffe2"></script>
+
+<script data-stellar-script="defines">
+  window.canonical = window.stellarClientData.canonical;
+  const ctx = window.stellarClientData.ctx;
+  window.canonical.param = {permalink: "https://blog.akise.app/posts/clash-dns-configure/", checklink: ctx.services.video.js};
+  ctx.date_suffix = {"just":"刚刚","min":"分钟前","hour":"小时前","day":"天前"};
+  if (ctx.search) Object.assign(ctx.search, {"more":"更多","no_more":"没有更多了"});
+  const def = window.stellarClientData.def;
+  window.ctx = ctx;
+  window.def = def;
+</script>
+
+
+<!-- core: 迁移期 DOM/资源兼容工具；Extension 注册与生命周期由 ESM runtime 所有 -->
+<script data-stellar-script="core" src="/js/utils.js?v=2.0.0"></script>
+<script data-stellar-script="core" src="/js/main.js?v=2.0.0" defer=""></script>
+<script data-stellar-script="core" defer="" src="/js/profile.js?v=2.0.0"></script>
+
+
+
+
+
+<script data-stellar-script="core" type="application/json" id="stellar-runtime-config">{"version":1,"root":"/","policy":{"cache":{"enabled":true,"defaultTtl":3600,"ttl":{"giscus":600,"waline":600,"artalk":600,"memos":600,"memos-user":86400,"sites":86400,"friends":86400,"friends_and_posts":86400,"siteinfo":86400},"maxEntries":200},"request":{"retries":2,"timeoutMs":5000,"idleTimeoutMs":3000,"maxCacheEntryBytes":204800},"features":{"codeCopyToastMs":2500},"providers":{"linkPrefetch":"flying_pages","lightbox":"fancybox","diagrams":"mermaid"}},"extensions":[{"id":"pin-slider","module":"/js/runtime/extensions/pin-slider.js","scope":"region","when":{"selector":".pin-slider"},"config":{}},{"id":"page-controls","module":"/js/runtime/extensions/page-controls.js","scope":"region","when":{"always":true},"config":{"highlight":"/js/search/highlight.js","tagtree":"/js/tagtree.js"}},{"id":"partial-navigation","module":"/js/runtime/extensions/partial-navigation.js","scope":"document","when":{"always":true},"config":{}},{"id":"color-scheme-switch","module":"/js/runtime/extensions/color-scheme-switch.js","scope":"document","when":{"always":true},"config":{"messages":{"light":"切换到浅色模式","dark":"切换到深色模式","auto":"切换到跟随系统配色"}}},{"id":"search","module":"/js/runtime/extensions/search.js","scope":"document","when":{"selector":".search-input"},"config":{"provider":"local","options":{"scope":"all","includeContent":true,"cacheTtlSeconds":86400},"assets":{"client":null,"provider":"/js/search/local-search.js","shortcut":"/js/search/shortcut.js"}}},{"id":"hero-parallax","module":"/js/runtime/extensions/hero-parallax.js","scope":"region","when":{"selector":".wiki-hero"},"config":{}},{"id":"hero-effect","module":"/js/runtime/extensions/hero-effect.js","scope":"region","when":{"selector":"canvas[data-hero-effect]"},"config":{}},{"id":"lazy-loading","module":"/js/runtime/extensions/lazy-loading.js","scope":"document","when":{"always":true},"config":{"asset":"https://gcore.jsdelivr.net/npm/vanilla-lazyload@19.1/dist/lazyload.min.js"}},{"id":"deferred-icons","module":"/js/runtime/extensions/deferred-icons.js","scope":"region","when":{"selector":"svg.icon[data-icon]"},"config":{}},{"id":"dropdown","module":"/js/runtime/extensions/dropdown.js","scope":"region","when":{"selector":"details.dropdown"},"config":{}},{"id":"services","module":"/js/runtime/extensions/services.js","scope":"region","when":{"selector":"#artalk_container, #twikoo_container, #waline_container, .data-service, [class*='ds-'], a[cardlink], a[data-md-link][data-siteinfo-api], .site-card [data-siteinfo-api], .voice\u003eaudio, .video\u003evideo, .chat-file"},"config":{"marked":"https://gcore.jsdelivr.net/npm/marked@13.0/lib/marked.umd.min.js"}},{"id":"comments","module":"/js/runtime/extensions/comments.js","scope":"region","when":{"selector":"#comments"},"config":{"provider":"giscus","options":{"data-repo":"akiakise/blog.akise.app","data-repo-id":"R_kgDOLkT3kg","data-category":"Announcements","data-category-id":"DIC_kwDOLkT3ks4CeK_U","data-mapping":"pathname","data-strict":0,"data-reactions-enabled":1,"data-emit-metadata":0,"data-input-position":"top","data-theme":"preferred_color_scheme","data-lang":"zh-CN","data-loading":null,"crossorigin":"anonymous"},"pageTitle":"Clash.Meta DNS 配置指南","assets":{"js":"https://giscus.app/client.js"}}},{"id":"settings","module":"/js/runtime/extensions/settings.js","scope":"region","when":{"selector":".settings-page"},"config":{}},{"id":"link-prefetch","module":"/js/runtime/extensions/link-prefetch.js","scope":"document","when":{"always":true},"config":{"asset":"https://gcore.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"}},{"id":"lightbox","module":"/js/runtime/extensions/lightbox.js","scope":"region","when":{"selector":"[data-fancybox]:not(.error), .with-fancybox, .ds-memos, .timenode p\u003eimg"},"config":{"enabled":true,"selector":".timenode p\u003eimg","assets":{"localCss":"/css/plugins/fancybox.css","js":"https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js","css":"https://gcore.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css"}}},{"id":"reveal","module":"/js/runtime/extensions/reveal.js","scope":"region","when":{"selector":".slide-up"},"config":{"enabled":true,"duration":800,"interval":200,"distance":8,"blur":4}},{"id":"diagrams","module":"/js/runtime/extensions/diagrams.js","scope":"region","when":{"selector":".mermaid"},"config":{"theme":"neutral","provider":"mermaid","assets":{"js":"https://gcore.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"},"colorScheme":"auto"}},{"id":"code-copy","module":"/js/runtime/extensions/code-copy.js","scope":"region","when":{"selector":".code"},"config":{"assets":{"js":"/js/plugins/copycode.js"},"messages":{"label":"复制","copied":"复制成功","denied":"未获得剪贴板权限","unsupported":"当前浏览器不支持剪贴板或页面不是 HTTPS"}}},{"id":"adaptive-text","module":"/js/runtime/extensions/adaptive-text.js","scope":"region","when":{"selector":"[data-text-adaptive]"},"config":{"assets":{"colorJs":"/js/color.js","js":"/js/plugins/adaptive-text.js"}}},{"id":"swiper","module":"/js/runtime/extensions/swiper.js","scope":"region","when":{"selector":"#swiper-api"},"config":{"assets":{"localCss":"/css/plugins/swiper.css","js":"https://unpkg.com/swiper@10.3/swiper-bundle.min.js","css":"https://unpkg.com/swiper@10.3/swiper-bundle.min.css"}}}]}</script>
+<script data-stellar-script="core" type="module" src="/js/runtime/index.js?v=2.0.0&amp;runtime=1"></script>
+
+
+<!-- inject -->
+<script>
+  (function () {
+    var el = document.getElementById('blog_history');
+    if (!el) return;
+    el.innerHTML = '© 2017 - ' + new Date().getFullYear() +
+      ' ♥ <a href="https://github.com/xaoxuu/hexo-theme-stellar" target="_blank">Stellar</a>';
+  })();
+</script>
+
+
+<script data-stellar-script="core" defer="" src="/js/navigation-init.js?v=2.0.0"></script>
+</div>
+
+</body></html>
